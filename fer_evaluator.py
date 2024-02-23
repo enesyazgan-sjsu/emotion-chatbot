@@ -4,6 +4,7 @@ import os
 import sys
 import argparse
 from PIL import Image
+import matplotlib.pyplot as plt
 
 #pytorch libraries
 import torch
@@ -41,22 +42,18 @@ def preprocess_webcam_image(image, device, width, height):
     image = image.to(device)
     return image
 
-def capture_and_evaluate_frames(fd_model, fer_model, device, frame_cap = None, width=112, height=112, cam_port=0):
-    class_names = ['Neutral', 'Happy', 'Sad', 'Surprise', 'Fear', 'Disgust', 'Angry'] 
-    
-    print("Loading camera. This takes a few seconds..")
-    cam = cv2.VideoCapture(cam_port)
-    #cam.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    #cam.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    print("done loading camera. capturing")
-    
-    captured_frames = 0
-    recording = True
-    
-    while recording:
-        result, frame = cam.read()
-        if result:
-            captured_frames+=1
+def load_and_evaluate_frames(fer_database, fd_model, fer_model, device, width=112, height=112):
+    class_names = ['Neutral', 'Happy', 'Sad', 'Surprise', 'Fear', 'Disgust', 'Angry']  
+    class_result_dict = {}
+    for emotion_subfolder in os.listdir(fer_database):
+        image_folder = fer_database + emotion_subfolder + "/"
+        print("Evaluating " + str(emotion_subfolder) + " images from FER database")
+        
+        num_correct = 0
+        num_incorrect = 0
+        for i, image in enumerate(list(os.listdir(image_folder))[:1]):
+            image_path = image_folder + image
+            frame = cv2.imread(image_path)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             
             #extract face from frame with MTCNN
@@ -69,20 +66,60 @@ def capture_and_evaluate_frames(fd_model, fer_model, device, frame_cap = None, w
                 out,feat,heads = fer_model(input_tensor)
 
                 _, prediction = torch.max(out, 1)
-                print("Model predicted: " + str(class_names[prediction[0].tolist()]))
+                pred_class = class_names[prediction[0].tolist()]
             else:
                 prediction = -1
-                print("Model recieved no face as input")
+                pred_class=None
                 
+            if pred_class != emotion_subfolder:
+                num_incorrect += 1
+            else:
+                num_correct += 1
+                
+            if i%20 == 0:
+                print("Completed " + str(i) + " evaluations.")
+                
+        print("Num correct: " + str(num_correct))
+        print("Num incorrect: " + str(num_incorrect))
+        accuracy = num_correct/(num_incorrect+num_correct)
+        print("Accuracy: " + str(accuracy))
             
-            
-            if frame_cap is not None and frame_cap <= captured_frames:
-                recording = False
+        class_result_dict.setdefault(emotion_subfolder,accuracy)
     
+    return class_result_dict
+
+def mkdir_if_dne(directory):
+    if not os.path.exists(directory):
+        os.mkdir(directory)    
+
+# function to add value labels
+def addlabels(x,y):
+    for i in range(len(x)):
+        plt.text(i, y[i], y[i], ha = 'center')
+        
+def generate_bargraph(result_dict, result_dir, eval_name):
+    x = list(result_dict.keys())
+    y = [float('{:,.3f}'.format(y)) for y in list(result_dict.values())]
+    
+    # setting figure size by using figure() function 
+    plt.figure(figsize = (10, 5))
+     
+    # making the bar chart on the data
+    plt.bar(x, y)
+     
+    # calling the function to add value labels
+    addlabels(x, y)
+     
+    # giving title to the plot
+    plt.title("FER Results: " + str(eval_name))
+     
+    # giving X and Y labels
+    plt.xlabel("Emotions")
+    plt.ylabel("Accuracy")
+    
+    plt.savefig(result_dir+ eval_name+".png")
 
 def main():
-     
-
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     #instantiate Face Detection Model
@@ -96,10 +133,18 @@ def main():
     fer_model = DDAMNet(num_class=7,num_head=args.num_head)
     fer_model.to(device)
     fer_model.eval() 
+    
+    #FER Database
+    fer_database = "./emotion_dataset/"
 
     #Running capture/eval loop    
-    capture_and_evaluate_frames(fd_model, fer_model, device, frame_cap = 10)
+    result_dict = load_and_evaluate_frames(fer_database, fd_model, fer_model, device)
     
+    result_dir = "./result_charts/"
+    mkdir_if_dne(result_dir)
+    eval_name = "FER_test_eval"
+    
+    generate_bargraph(result_dict, result_dir, eval_name)
     
 if __name__ == "__main__":
     main()

@@ -7,8 +7,6 @@ import time
 def capture_database_frames(data_dir, num_frames_to_capture, category_maximum, target_resolution = (256,256), delay_s = 0.05, ext = ".png", name_length = 5, cam_port = 0):
     print("loading camera. This takes a few seconds..")
     cam = cv2.VideoCapture(cam_port)
-    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     print("done loading camera. capturing")
     
     #check number of frames in data_folder already
@@ -36,7 +34,8 @@ def capture_database_frames(data_dir, num_frames_to_capture, category_maximum, t
             if result and capturing:
                 captured_frames+=1
                 
-                image = cv2.resize(image, target_resolution, interpolation = cv2.INTER_AREA)
+                if target_resolution is not None:
+                    image = cv2.resize(image, target_resolution, interpolation = cv2.INTER_AREA)
                 
                 frame_str = str(frame_num)
                 image_name = "0"*(name_length-len(frame_str)) + frame_str+ext
@@ -53,14 +52,16 @@ def main():
     main_dataset_folder = "./emotion_dataset/"
     mkdir_if_dne(main_dataset_folder)
     
-    emotion = "happy"
+    
+    class_names = ['Neutral', 'Happy', 'Sad', 'Surprise', 'Fear', 'Disgust', 'Angry']  
+    emotion = class_names[6]
     emotion_subfolder = main_dataset_folder + emotion + "/"
     mkdir_if_dne(emotion_subfolder)
     
     
     category_maximum = 300
-    num_frames_to_capture = 128
-    target_resolution = (256,256)
+    num_frames_to_capture = 100
+    target_resolution = None#(256,256)
     delay_between_frames_s = 0.05 #capture delay in seconds
     
     print("You are about to capture " + str(num_frames_to_capture) + " images.")
