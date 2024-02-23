@@ -5,10 +5,16 @@ import sys
 import argparse
 from PIL import Image
 
-##DDAMFN Libraries
+#pytorch libraries
 import torch
 from torchvision import transforms, datasets
 import torch.utils.data as data
+
+##Face Detection Library
+from facenet_pytorch import MTCNN
+
+## [FER] DDAMFN Libraries
+#obtain fer_model from: https://github.com/simon20010923/DDAMFN
 from networks.DDAM import DDAMNet
 
 def parse_args():
@@ -21,7 +27,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def preprocess_webcam_image(image, device, width=112, height=112):
+def preprocess_webcam_image(image, device, width, height):
     image = Image.fromarray(image)
     data_transforms = transforms.Compose([
         transforms.Resize((width, height)),
@@ -33,11 +39,15 @@ def preprocess_webcam_image(image, device, width=112, height=112):
     image = image.unsqueeze(0)
     image = image.float()
     image = image.to(device)
-         
+    
+    
+    print(image.size())
+    print(type(image))
+    print("+++++")
     return image
 
-def capture_and_evaluate_frames(model, device, frame_cap = None, width=112, height=112, cam_port=0):
-    print("loading camera. This takes a few seconds..")
+def capture_and_evaluate_frames(fd_model, fer_model, device, frame_cap = None, width=112, height=112, cam_port=0):
+    print("Loading camera. This takes a few seconds..")
     cam = cv2.VideoCapture(cam_port)
     #cam.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     #cam.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -47,14 +57,17 @@ def capture_and_evaluate_frames(model, device, frame_cap = None, width=112, heig
     recording = True
     
     while recording:
-        result, image = cam.read()
+        result, frame = cam.read()
         if result:
             captured_frames+=1
-            #image = cv2.resize(image, (width,height), interpolation = cv2.INTER_AREA)
-            print(image.shape)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            
+            #extract face from frame with MTCNN
+            face = fd_model(frame).permute(1, 2, 0).numpy().astype(np.uint8)
+
             #make prediction with DDAMFN
-            input_tensor = preprocess_webcam_image(image, device, width=width, height=height)
-            out,feat,heads = model(input_tensor)
+            input_tensor = preprocess_webcam_image(face, device, width, height)
+            out,feat,heads = fer_model(input_tensor)
 
             _, prediction = torch.max(out, 1)
             print("Model predicted: " + str(prediction))
@@ -66,17 +79,22 @@ def capture_and_evaluate_frames(model, device, frame_cap = None, width=112, heig
 def main():
     class_names = ['Neutral', 'Happy', 'Sad', 'Surprise', 'Fear', 'Disgust', 'Angry']  
 
-    #obtain model from: https://github.com/simon20010923/DDAMFN
-    model_folder = "./DDAMFN-main/DDAMFN-main/pretrained/"
-    model_name = "MFN_msceleb.pth"
-    
-    args = parse_args()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = DDAMNet(num_class=7,num_head=args.num_head)
-    model.to(device)
-    model.eval()   
+
+    #instantiate Face Detection Model
+    print("Loading FD Model")
+    fd_model = MTCNN(margin=40, select_largest=True, post_process=False)
+    fd_model.to(device)
     
-    capture_and_evaluate_frames(model, device, frame_cap = 10)
+    #instantiate FER Model
+    print("Loading FER Model")
+    args = parse_args()
+    fer_model = DDAMNet(num_class=7,num_head=args.num_head)
+    fer_model.to(device)
+    fer_model.eval() 
+
+    #Running capture/eval loop    
+    capture_and_evaluate_frames(fd_model, fer_model, device, frame_cap = 10)
     
     
 if __name__ == "__main__":
