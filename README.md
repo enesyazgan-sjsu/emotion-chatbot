@@ -21,3 +21,10 @@ Paste ./networks/ and ./pretrained/ into the main code folder (same folder as ma
 
 #To run script:
 python main.py
+
+
+### TO RUN #####
+
+Run VideoStream.py in one terminal. Then, run Gui.py in another terminal.
+
+VideoStream.py creates a server and runs FER on a continuous webcam stream, sending the result of the FER for each captured frame to its client application, gui.py
