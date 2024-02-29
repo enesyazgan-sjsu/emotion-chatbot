@@ -1,6 +1,15 @@
 import os
 from openai import OpenAI
 
+'''
+# class to handle chatGPT messaging
+# example use:
+x = ChatHandler()
+x.initializeAPI()
+x.sendMessage()
+print(x.returnReply())
+'''
+
 class ChatHandler:
     def __init__(self):
         self.message = 'Say this is a test.'
@@ -30,7 +39,3 @@ class ChatHandler:
     def returnReply(self):
         return(self.chatCompletion.choices[0].message.content)
 
-x = ChatHandler()
-x.initializeAPI()
-x.sendMessage()
-print(x.returnReply())
