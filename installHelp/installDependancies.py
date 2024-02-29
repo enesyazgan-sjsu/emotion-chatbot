@@ -5,8 +5,9 @@ def install(name):
 
 installList = ['opencv-python', 'pillow', 'torch', 'torchvision', 
 	       'facenet_pytorch', 'networks', 'asyncore', 'asynchat',
-	      'socket', 'openai', 'python-dotenv']
+	      'socket', 'openai']
 
+# from DDAM github
 installList.append('networks.DDAM')
 
 for each in installList:
