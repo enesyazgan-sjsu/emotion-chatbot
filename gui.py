@@ -1,7 +1,7 @@
 # GUI implemented using: https://www.geeksforgeeks.org/gui-chat-application-using-tkinter-in-python/
 import socket
 from tkinter import *
-
+from chatHandler import ChatHandler
 
 """
 Version 1.0 of Gui application.
@@ -23,7 +23,8 @@ Microphone button/speech to text entry: Not Yet Implemented
 
 # GUI class for the chat
 class GUI:
-    # constructor method
+    # constructor method with video stream client
+    # set client  to None for gui only
     def __init__(self, client):
         ###additional variables####
         self.client = client
@@ -31,6 +32,7 @@ class GUI:
         self.chat_started = False
         self.fer_result = "None"
         ###########################
+        self.chatHandler = ChatHandler()
  
         # chat window which is currently hidden
         self.Window = Tk()
@@ -84,13 +86,15 @@ class GUI:
  
         self.go.place(relx=0.4,
                       rely=0.55)
-        
-        self.Window.after(10, self.getCurrentFER)
+
+        if self.client != None:
+            self.Window.after(10, self.getCurrentFER)
         self.Window.mainloop()
  
     def beginChat(self, name):
         self.login.destroy()
         self.layout(name)
+        self.chatHandler.initializeAPI()
         self.chat_started = True
  
     def getCurrentFER(self, delay = 10):
@@ -213,9 +217,15 @@ class GUI:
     def getLLMResponse(self):
         user_query = self.msg
         query_augmentation = self.getQueryAugmentation()
-        
-        LLM_response = "No LLM Implemented yet"
-        
+
+        try:
+            self.chatHandler.defineMessage(user_query)
+            self.chatHandler.sendMessage()
+            LLM_response = self.chatHandler.returnReply()
+        except Exception as e:
+            print(e)
+            LLM_response = "Problem with LLM handler: "
+            
         self.reply = LLM_response
         
  
@@ -236,33 +246,38 @@ class GUI:
         self.textCons.see(END)
  
 
-def main():
-    port = 400
-    host = socket.gethostname()
-    
-    connection_attempts = 5000
-    connect_success = False
-    for i in range(connection_attempts):
-        if not connect_success:
-            try:
-                client = socket.socket(socket.AF_INET,
-                                   socket.SOCK_STREAM)
-                client.connect((host, port))
-                
-                chat_app = GUI(client)
-                connect_success = True
-                
-            except:
-                if i%(connection_attempts//10)==0:
-                    print("Failed to connect, retrying")
-                continue
-    
-    if not connect_success: 
-        print("Failed to connect to Videostream server! Please ensure it is running first.")
-    else:
-        print("Thanks for using this app.")
-    
+def main(useVideoStream = True):
+    if useVideoStream == True:
+        port = 400
+        host = socket.gethostname()
+        
+        connection_attempts = 5000
+        connect_success = False
+        for i in range(connection_attempts):
+            if not connect_success:
+                try:
+                    client = socket.socket(socket.AF_INET,
+                                       socket.SOCK_STREAM)
+                    client.connect((host, port))
+                    
+                    chat_app = GUI(client)
+                    connect_success = True
+                    
+                except:
+                    if i%(connection_attempts//10)==0:
+                        print("Failed to connect, retrying")
+                    continue
+        
+        if not connect_success: 
+            print("Failed to connect to Videostream server! Please ensure it is running first.")
+        else:
+            print("Thanks for using this app.")
 
-    
+    # run GUI only for dev purposes
+    else:
+        chat_app = GUI(client = None)
+
 if __name__ == "__main__":
     main()
+    # use the following to run the GUI only
+    # main(False)

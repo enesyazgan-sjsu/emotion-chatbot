@@ -20,7 +20,7 @@ class ChatHandler:
         self.chatCompletion = None
         self.reply = None
         
-    def initializeAPI(self, api_key = "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"):
+    def initializeAPI(self, api_key = "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"):
         self.api_key = api_key
         self.client = OpenAI(api_key = self.api_key)
         self.api_key = '' # deleted for security concerns
