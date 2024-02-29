@@ -28,6 +28,8 @@ run installDependancies.py -- this should install any necessary modules on your 
 #To run the main script:
 python main.py
 
+### TO RUN THE GUI ALONE ####
+change main() to main(False) at the bottom of gui.py
 
 ### TO RUN THE GUI AND WEBCAM SERVER #####
 
