@@ -94,7 +94,7 @@ class GUI:
     def beginChat(self, name):
         self.login.destroy()
         self.layout(name)
-        self.chatHandler.initializeAPI()
+        self.chatHandler.initializeAPI(api_key = name)
         self.chat_started = True
  
     def getCurrentFER(self, delay = 10):
@@ -278,6 +278,6 @@ def main(useVideoStream = True):
         chat_app = GUI(client = None)
 
 if __name__ == "__main__":
-    main()
+    #main()
     # use the following to run the GUI only
-    # main(False)
+    main(False)
