@@ -5,6 +5,7 @@ SJSU 2024 Grad Project - Emotion Chatbot
 Become a member and get a key. Instructions at top of gui.py
 
 Best practices as per OpenAI is to set an environment variable:
+
 https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
 
 
@@ -48,13 +49,18 @@ VideoStream.py creates a server and runs FER on a continuous webcam stream, send
 3/1/24:
 **SYSTEM COMMANDS**
 Using a command prefix, you can change and print variables during the chat to test different situations without restarting the system. For example:
+
 %%% self.showAugmentation False
+
 will cause the client to stop showing the user the emotional augmentation (although it still sends it to chatGPT)
+
 %%% print self.useAugmentation
+
 will output the status of the self.useAugmentation variable
 
 self.commandList is a list of supported variables (we could change it to just expose all variables easily).
 
 **GUI NAVIGATION**
 entering an api-key in the first window will use that - otherwise it will look for an environment variable to use
+
 shift-enter will send the text to chatGPT (as will the send button)
