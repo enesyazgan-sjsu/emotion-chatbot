@@ -24,7 +24,7 @@ except Exception as e:
 
 
 # run videostream_loop.py in a cmd window before you run this
-useServer = False # set to false to run GUI only
+useServer = True # set to false to run GUI only
 
 """
 Version 1.0 of Gui application.
@@ -66,6 +66,7 @@ class GUI:
         self.reply = '' # the response from chatbot
         self.msg = '' # the original message typed in
         self.showAugmentation = True # output the emotional augmentation being used
+        self.useAugmentation = True # set to False to not use emotional augmentation
         self.aug_dict = {'None':[""],
             'Neutral':["(Reply as if I have a neutral facial expression)"],
             'Happy':["(Reply as if I am really happy)"], 
@@ -77,7 +78,7 @@ class GUI:
 
         self.commandPrefix = "%%%" # prefix to enter a command to the system (see sendButton())
         # dictionary of available commanable variables and their values
-        self.commandList = ['self.showAugmentation']
+        self.commandList = ['self.showAugmentation','self.useAugmentation']
         
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
@@ -282,13 +283,12 @@ class GUI:
 
         return self.queryAug
  
-    ##TODO: get LLM response to query. Add query Agumentation phrases as well
-    def getLLMResponse(self):
-        user_query = self.msg
-        query_augmentation = self.getQueryAugmentation()
+    def getLLMResponse(self, query = None): # default is to use non-augmented message
+        if query is None:
+            query = self.msg
 
         try:
-            self.chatHandler.defineMessage(message=user_query)
+            self.chatHandler.defineMessage(message=query)
             self.chatHandler.sendMessage()
             LLM_response = self.chatHandler.returnReply()
         except Exception as e:
@@ -302,8 +302,11 @@ class GUI:
         self.getQueryAugmentation()
         self.augMsg = self.queryAug + " " + self.msg
         return self.augMsg
+
     def setAugDisplay(self, value): # show or hide augmentation from user
         self.showAugmentation = value
+    def setUseAumentation(self, value): # change whether or not to use emotions
+        self.useAugmentation = value
         
     # function to basically start the thread for sending messages
     def sendButton(self, msg): # also gets called with binding (e.g., <Shift-Return>)
@@ -314,17 +317,22 @@ class GUI:
             # get emotion, augmentation, compose with msg, and get response
             self.composeAugMsg()
             self.entryMsg.delete('1.0', 'end') # clean up
-            self.getLLMResponse()
+            if self.useAugmentation:
+                self.getLLMResponse(query = self.augMsg)
+            else:
+                self.getLLMResponse(query = self.msg)
 
             # insert messages to text box
             self.textCons.config(state=NORMAL)
-            if self.showAugmentation:
-                self.textCons.insert(END,
-                                     "\n"+self.userName+": "+self.augMsg + "Chatbot: " + self.reply + "\n")
-            else:
-                self.textCons.insert(END,
-                                     "\n"+self.userName+": "+self.msg + "Chatbot: " + self.reply + "\n")
-                
+            if self.useAugmentation:
+                if self.showAugmentation:
+                    self.textCons.insert(END,
+                                         "\n"+self.userName+": "+self.augMsg + "Chatbot: " + self.reply + "\n")
+                else:
+                    self.textCons.insert(END,
+                                         "\n"+self.userName+": (----) "+self.msg + "Chatbot: " + self.reply + "\n")
+            else: # if not using augmentation at all
+                self.textCons.insert(END, "\n"+self.userName+": "+self.msg + "Chatbot: " + self.reply + "\n")
 
             self.textCons.config(state=DISABLED)
             self.textCons.see(END)
@@ -346,7 +354,8 @@ class GUI:
             elif command[1] == 'print':
                 self.textCons.insert(END, command[1] +' '+ command[2] + "\n")
                 self.textCons.insert(END, f'{command[2]} equal to: ' + str(eval(command[2])))
-
+            else:
+                raise Exception("command not found")
         except:
             self.textCons.insert(END, self.commandPrefix+"  COMMAND NOT UNDERSTOOD  "+self.commandPrefix+"\n")
             self.textCons.config(state=DISABLED)
