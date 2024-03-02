@@ -1,6 +1,13 @@
 # emotion-chatbot
 SJSU 2024 Grad Project - Emotion Chatbot
 
+# You will need your own OPENAI_API_KEY
+Become a member and get a key. Instructions at top of gui.py
+
+Best practices as per OpenAI is to set an environment variable:
+https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
+
+
 
 #DDAMFN REQUIREMENTS:
 Install python 3.8.9: https://www.python.org/downloads/release/python-389/ 
