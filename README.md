@@ -32,14 +32,29 @@ Paste ./networks/ and ./pretrained/ into the main code folder (same folder as ma
 
 run installDependancies.py -- this should install any necessary modules on your system.
 
-#To run the main script:
-python main.py
-
 ### TO RUN THE GUI ALONE ####
-change main() to main(False) at the bottom of gui.py
+set useServer to False at top of gui.py
 
 ### TO RUN THE GUI AND WEBCAM SERVER #####
 
 Run VideoStream.py in one terminal. Then, run Gui.py in another terminal.
 
 VideoStream.py creates a server and runs FER on a continuous webcam stream, sending the result of the FER for each captured frame to its client application, gui.py
+
+#######################################
+## FUNCTIONS
+#######################################
+
+3/1/24:
+**SYSTEM COMMANDS**
+Using a command prefix, you can change and print variables during the chat to test different situations without restarting the system. For example:
+%%% self.showAugmentation False
+will cause the client to stop showing the user the emotional augmentation (although it still sends it to chatGPT)
+%%% print self.useAugmentation
+will output the status of the self.useAugmentation variable
+
+self.commandList is a list of supported variables (we could change it to just expose all variables easily).
+
+**GUI NAVIGATION**
+entering an api-key in the first window will use that - otherwise it will look for an environment variable to use
+shift-enter will send the text to chatGPT (as will the send button)
