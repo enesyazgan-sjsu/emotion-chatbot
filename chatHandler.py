@@ -26,15 +26,17 @@ class ChatHandler:
         self.api_key = '' # deleted for security concerns
 
     def defineMessage(self, message='Say this is a test.'):
-        self.message = {"role":self.role, "content":self.message}
+        self.message = {"role":self.role, "content":message}
     def defineRole(self, role='user'):
         self.role = role
     def defineModel(self, model = 'gpt-3.5-turbo'):
         self.model = model
 
     def sendMessage(self):
-        self.chatCompletion = self.client.chat.completions.create(messages=[{"role":"user","content":"Say this is a test"}],
-                                                                  model="gpt-3.5-turbo")
+        #self.chatCompletion = self.client.chat.completions.create(messages=[{"role":"user","content":"Say this is a test"}],
+        #                                                          model="gpt-3.5-turbo")
+        self.chatCompletion = self.client.chat.completions.create(messages=[self.message],
+                                                                  model=self.model)
         return (self.chatCompletion)
     def returnReply(self):
         return(self.chatCompletion.choices[0].message.content)

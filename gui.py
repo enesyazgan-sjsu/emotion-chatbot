@@ -2,6 +2,26 @@
 import socket
 from tkinter import *
 from chatHandler import ChatHandler
+import os
+import openai
+
+
+#############################################
+############# IMPORTANT #####################
+#############################################
+# This will look on your system for an environment variable
+# to use as a key.
+#   Set one. You may have to restart your IDE afterward.
+#        Please use this command in a cmd prompt:
+# setx OPENAI_API_KEY “<yourkey>”
+
+try:
+    #openai.api_key = os.environ["OPENAI_API_KEY"]
+    key = os.environ["OPENAI_API_KEY"]
+except Exception as e:
+    print("NO KEY ENVIRONMENT VARIABLE FOUND, PLEASE INPUT AT LOGIN.")
+    print(e)
+    
 
 """
 Version 1.0 of Gui application.
@@ -79,11 +99,15 @@ class GUI:
  
         # create a Continue Button
         # along with action
+        # make this button respond to 'return' as well
+        self.login.bind("<Return>", lambda e: self.beginChat(self.entryName.get()))
+
         self.go = Button(self.login,
                          text="CONTINUE",
                          font="Helvetica 14 bold",
                          command=lambda: self.beginChat(self.entryName.get()))
- 
+        self.go.pack() # activate the return binding
+        
         self.go.place(relx=0.4,
                       rely=0.55)
 
@@ -91,10 +115,13 @@ class GUI:
             self.Window.after(10, self.getCurrentFER)
         self.Window.mainloop()
  
-    def beginChat(self, name):
+    def beginChat(self, name): #############################
         self.login.destroy()
         self.layout(name)
-        self.chatHandler.initializeAPI(api_key = name)
+        try:
+            self.chatHandler.initializeAPI(api_key = key)
+        except:
+            self.chatHandler.initializeAPI(api_key = name)
         self.chat_started = True
  
     def getCurrentFER(self, delay = 10):
@@ -159,7 +186,7 @@ class GUI:
         self.labelBottom.place(relwidth=1,
                                rely=0.825)
  
-        self.entryMsg = Entry(self.labelBottom,
+        self.entryMsg = Text(self.labelBottom,
                               bg="#2C3E50",
                               fg="#EAECEE",
                               font="Helvetica 13")
@@ -172,15 +199,18 @@ class GUI:
                             relx=0.011)
  
         self.entryMsg.focus()
- 
+        
         # create a Send Button
+        # make it respond to 'ctrl+return' too.
+        self.Window.bind("<Control-Return>", lambda e: self.sendButton(self.entryMsg.get("1.0","end")))
+        
         self.buttonMsg = Button(self.labelBottom,
                                 text="Send",
                                 font="Helvetica 10 bold",
                                 width=20,
                                 bg="#ABB2B9",
-                                command=lambda: self.sendButton(self.entryMsg.get()))
- 
+                                command=lambda: self.sendButton(self.entryMsg.get("1.0","end")))
+        self.buttonMsg.pack() # activate the return binding
         self.buttonMsg.place(relx=0.77,
                              rely=0.008,
                              relheight=0.06,
@@ -199,7 +229,8 @@ class GUI:
         scrollbar.config(command=self.textCons.yview)
  
         self.textCons.config(state=DISABLED)
- 
+
+        
     ###TODO: Create Query Augmentation Phrases Dict.
     def getQueryAugmentation(self):
         aug_dict = {'None':[],
@@ -219,7 +250,7 @@ class GUI:
         query_augmentation = self.getQueryAugmentation()
 
         try:
-            self.chatHandler.defineMessage(user_query)
+            self.chatHandler.defineMessage(message=user_query)
             self.chatHandler.sendMessage()
             LLM_response = self.chatHandler.returnReply()
         except Exception as e:
@@ -233,7 +264,7 @@ class GUI:
     def sendButton(self, msg):
         self.textCons.config(state=DISABLED)
         self.msg = msg
-        self.entryMsg.delete(0, END)
+        self.entryMsg.delete('1.0', 'end')
         
         self.getLLMResponse() ##FUNCTION NOT YET IMPLEMENTED!
 
