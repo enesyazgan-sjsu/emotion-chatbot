@@ -3,3 +3,4 @@ pillow
 matplotlib
 facenet-pytorch
 tk
+openai
