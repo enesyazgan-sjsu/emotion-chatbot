@@ -58,6 +58,8 @@ class GUI:
         self.terminator = "#"
         self.chat_started = False
         self.fer_result = "None"
+        
+        
         ####### more variables ######
         self.chatHandler = ChatHandler()
         self.name = '' # api-key variable... so poorly named... I'm sorry.... :(
@@ -67,6 +69,7 @@ class GUI:
         self.msg = '' # the original message typed in
         self.showAugmentation = True # output the emotional augmentation being used
         self.useAugmentation = True # set to False to not use emotional augmentation
+        self.ferDelay = 500 
         self.aug_dict = {'None':[""],
             'Neutral':["(Reply as if I have a neutral facial expression)"],
             'Happy':["(Reply as if I am really happy)"], 
@@ -78,7 +81,7 @@ class GUI:
 
         self.commandPrefix = "%%%" # prefix to enter a command to the system (see sendButton())
         # dictionary of available commanable variables and their values
-        self.commandList = ['self.showAugmentation','self.useAugmentation']
+        self.commandList = ['self.showAugmentation','self.useAugmentation', 'self.ferDelay']
         
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
@@ -150,7 +153,7 @@ class GUI:
                       rely=0.8)
 
         if self.client != None:
-            self.Window.after(10, self.getCurrentFER)
+            self.Window.after(self.fer_delay, self.getCurrentFER)
 
         self.Window.mainloop()    
  

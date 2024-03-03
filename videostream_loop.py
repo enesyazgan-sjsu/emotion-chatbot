@@ -3,7 +3,7 @@ import numpy as np
 import os  
 import sys
 import argparse
-from PIL import Image as Img
+from PIL import Image
 
 #pytorch libraries
 import torch
@@ -19,9 +19,6 @@ from networks.DDAM import DDAMNet
 
 ##networking libraries
 import asyncore, asynchat, socket
-
-# GUI implemented using: https://www.geeksforgeeks.org/gui-chat-application-using-tkinter-in-python/
-from tkinter import *
 
 ########################################
 ##### SERVER COMMUNICATION MODULES #####
@@ -62,7 +59,7 @@ class FERServer(asynchat.async_chat):
         self.run_fer_loop(frame_cap=None)
     
     def preprocess_webcam_image(self, image, width, height):
-        image = Img.fromarray(image)
+        image = Image.fromarray(image)
         data_transforms = transforms.Compose([
             transforms.Resize((width, height)),
             transforms.ToTensor(),
@@ -89,12 +86,24 @@ class FERServer(asynchat.async_chat):
             result, frame = cam.read()
             if result:
                 captured_frames+=1
+                
+                #save original webcam image
+                cv2.imwrite("./dbg/Full_webcam_frame.png", frame)
+                
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 
                 #extract face from frame with MTCNN
                 face = self.fd_model(frame)
+                
                 if face is not None:
                     face = face.permute(1, 2, 0).numpy().astype(np.uint8)
+                    
+                    try:
+                        im = Image.fromarray(face)
+                        im.save("./dbg/Cropped_40_frame.png")
+                    except Exception as e:
+                        print(e)
+
 
                     #make prediction with DDAMFN
                     input_tensor = self.preprocess_webcam_image(face, width, height)
@@ -131,9 +140,9 @@ def main():
     #instantiate Face Detection Model
     print("Loading FD Model")
     if device.type == 'cuda':
-        fd_model = MTCNN(margin=40, select_largest=True, post_process=False, device = "cuda")
+        fd_model = MTCNN(margin=50, select_largest=True, post_process=False, device = "cuda")
     else:
-        fd_model = MTCNN(margin=40, select_largest=True, post_process=False)
+        fd_model = MTCNN(margin=50, select_largest=True, post_process=False)
     fd_model.to(device)
     
     #instantiate FER Model
