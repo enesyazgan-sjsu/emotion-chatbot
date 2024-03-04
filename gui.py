@@ -24,7 +24,7 @@ except Exception as e:
 
 
 # run videostream_loop.py in a cmd window before you run this
-useServer = True # set to false to run GUI only
+useServer = False # set to false to run GUI only
 
 try:
     pathToVideoStreamLoop = 'start python ./videostream_loop.py' 
@@ -73,7 +73,10 @@ class GUI:
         self.terminator = "#"
         self.chat_started = False
         self.fer_result = "None"
-        
+        self.userStartedTyping = False
+        self.timeStartTyping = 0.0
+        self.timeStopTyping = 0.0
+
         
         ####### more variables ######
         self.chatHandler = ChatHandler()
@@ -245,6 +248,10 @@ class GUI:
         # create a Send Button
         # make it respond to 'ctrl+return' too.
         self.Window.bind("<Shift-Return>", lambda e: self.sendButton(self.entryMsg.get("1.0","end")))
+        self.Window.bind("<Escape>",self.closeApp)
+
+        self.Window.bind("<Key>", self.keyPressedEvent)
+
         
         self.buttonMsg = Button(self.labelBottom,
                                 text="Send",
@@ -271,6 +278,16 @@ class GUI:
         scrollbar.config(command=self.textCons.yview)
  
         self.textCons.config(state=DISABLED)
+        
+    def keyPressedEvent(self, event):
+        if event.keysym != "Shift_R" and event.keysym != "Shift_L":
+            if self.userStartedTyping == False:
+                self.userStartedTyping = True
+                self.timeStartTyping = time.time()
+                print("user started typing at: ", self.timeStartTyping)
+
+    def closeApp(self, event):
+        self.Window.destroy()
 
     def beginChat(self, name, userName = ':'): #############################
         self.login.destroy()
@@ -333,6 +350,10 @@ class GUI:
     def sendButton(self, msg): # also gets called with binding (e.g., <Shift-Return>)
         self.textCons.config(state=DISABLED)
         self.msg = msg
+        self.userStartedTyping = False # user has sent a message and has not yet started typing again
+        self.timeStopTyping = time.time()
+        print("user stopped typing at: ", self.timeStopTyping)
+        print()
 
         if self.commandPrefix not in self.msg:
             # get emotion, augmentation, compose with msg, and get response
