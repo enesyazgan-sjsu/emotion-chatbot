@@ -4,7 +4,7 @@ from tkinter import *
 from chatHandler import ChatHandler
 import os
 import openai
-
+import time
 
 #############################################
 ############# IMPORTANT #####################
@@ -26,6 +26,17 @@ except Exception as e:
 # run videostream_loop.py in a cmd window before you run this
 useServer = True # set to false to run GUI only
 
+'''
+if useServer:
+    print("starting server...")
+    # run videostream_loop.py
+    import subprocess
+    import sys
+    subprocess.run(["cmd.exe", "/c", "python C:/Users/emead/Downloads/videostream_loopOLD.py"])
+    print("waiting for server to start...")
+    time.sleep(5)
+    print("done waiting...")
+'''
 """
 Version 1.0 of Gui application.
 
@@ -82,6 +93,7 @@ class GUI:
         self.commandPrefix = "%%%" # prefix to enter a command to the system (see sendButton())
         # dictionary of available commanable variables and their values
         self.commandList = ['self.showAugmentation','self.useAugmentation', 'self.ferDelay']
+        self.restrictAccessToCommandList = False
         
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
@@ -153,7 +165,7 @@ class GUI:
                       rely=0.8)
 
         if self.client != None:
-            self.Window.after(self.fer_delay, self.getCurrentFER)
+            self.Window.after(self.ferDelay, self.getCurrentFER)
 
         self.Window.mainloop()    
  
@@ -266,7 +278,9 @@ class GUI:
             self.chatHandler.initializeAPI(api_key = name)
         self.chat_started = True
  
-    def getCurrentFER(self, delay = 10):
+    def getCurrentFER(self, delay = None):
+        if delay != None:
+            self.ferDelay = delay
         if self.chat_started:
             try:
                 raw_message = str(self.client.recv(1024).decode('utf-8'))
@@ -276,7 +290,7 @@ class GUI:
             except:
                 print("no message from server")
                 self.labelHead.config(text="No Server Detected: " + str(self.fer_result))
-        self.Window.after(10, self.getCurrentFER)  # reschedule event in 2 seconds
+        self.Window.after(self.ferDelay, self.getCurrentFER)  # reschedule event in 2 seconds
  
     def getQueryAugmentation(self, index = 0):
         if self.fer_result in self.aug_dict:
@@ -347,16 +361,21 @@ class GUI:
         try:
             command = self.msg.split()
             self.textCons.insert(END, "\n"+self.commandPrefix+"  SYSTEM COMMAND  "+self.commandPrefix+"\n")
-            if command[1] in self.commandList:
+            if command[1] == 'print':
+                self.textCons.insert(END, command[1] +' '+ command[2] + "\n")
+                self.textCons.insert(END, f'{command[2]} equal to: ' + str(eval(command[2])))
+            elif command[1] == 'help':
+                self.textCons.insert(END, f'the following commands should work (others *may* work):\n' + str(self.commandList))
+
+            # other commands which may or may not be in the commandList
+            elif ((self.restrictAccessToCommandList and (command[1] in self.commandList)) or \
+               self.restrictAccessToCommandList == False): # use list or just try it anyway (less secure)
                 exec(f'{command[1]}={command[2]}')
                 self.textCons.insert(END, command[1] +"  =  "+ command[2]+"\n")
                 output=f'{command[1]} now set to: '
                 output=output+str(eval(command[1]))
                                     
                 self.textCons.insert(END, output+'\n')
-            elif command[1] == 'print':
-                self.textCons.insert(END, command[1] +' '+ command[2] + "\n")
-                self.textCons.insert(END, f'{command[2]} equal to: ' + str(eval(command[2])))
             else:
                 raise Exception("command not found")
         except:
