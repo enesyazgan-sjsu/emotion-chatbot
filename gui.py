@@ -26,17 +26,21 @@ except Exception as e:
 # run videostream_loop.py in a cmd window before you run this
 useServer = True # set to false to run GUI only
 
-'''
-if useServer:
-    print("starting server...")
-    # run videostream_loop.py
-    import subprocess
-    import sys
-    subprocess.run(["cmd.exe", "/c", "python C:/Users/emead/Downloads/videostream_loopOLD.py"])
-    print("waiting for server to start...")
-    time.sleep(5)
-    print("done waiting...")
-'''
+try:
+    pathToVideoStreamLoop = 'start python ./videostream_loop.py' 
+    if useServer:
+        print("starting server...")
+        # run videostream_loop.py
+        import subprocess
+        import sys
+        subprocess.Popen(pathToVideoStreamLoop, shell=True) 
+        print("waiting for server to start...")
+        time.sleep(10)
+        print("done waiting...")
+except:
+    print("problem starting server... aborting server.")
+    useServer = False
+
 """
 Version 1.0 of Gui application.
 
