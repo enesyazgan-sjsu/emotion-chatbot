@@ -61,6 +61,13 @@ Microphone button/speech to text entry: Not Yet Implemented
 
 # GUI class for the chat
 class GUI:
+    def setAPIkeyAsEnvVar(self,key):
+        try:
+            os.environ["OPENAI_API_KEY"] = key
+        except:
+            print ("problem setting key as environmental variable")
+            print("you will need to re-enter your key next time")
+
     # constructor method with video stream client
     # set client  to None for gui only
     def __init__(self, client):
@@ -119,21 +126,21 @@ class GUI:
                              height=300)
         # create a Label for api-key
         self.pls = Label(self.login,
-                         text="Please enter an api-key (or leave it blank to skip).",
+                         text="Please enter an api-key (or leave it blank to skip).\nThis will set the key as an environmental variable\n on your system if possible.",
                          justify=CENTER,
                          font="Helvetica 14 bold")
  
-        self.pls.place(relheight=0.15,
+        self.pls.place(relheight=0.35,
                        relx=0.2,
                        rely=0.07)
         # entry box for api-key (or return to skip)
         self.entryName = Entry(self.login,
                                font="Helvetica 14")
  
-        self.entryName.place(relwidth=0.6,
+        self.entryName.place(relwidth=0.65,
                              relheight=0.1,
                              relx=0.1,
-                             rely=0.3)
+                             rely=0.35)
  
         # create a Label for user name
         self.labelName = Label(self.login,
@@ -141,9 +148,9 @@ class GUI:
                                justify=CENTER,
                                font="Helvetica 12")
  
-        self.labelName.place(relheight=0.6,
+        self.labelName.place(relheight=0.15,
                              relx=0.1,
-                             rely=0.2)
+                             rely=0.5)
 
         # create a entry box for user name 
         self.entryUserName = Entry(self.login,
@@ -297,6 +304,7 @@ class GUI:
             self.chatHandler.initializeAPI(api_key = key)
         except:
             self.chatHandler.initializeAPI(api_key = name)
+            self.setAPIkeyAsEnvVar(name)
         self.chat_started = True
  
     def getCurrentFER(self, delay = None):
