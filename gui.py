@@ -272,39 +272,25 @@ class GUI:
         # emotion image zone
         self.fer_image = Image.open(self.startImage)
         self.fer_image = ImageTk.PhotoImage(self.fer_image)
-        self.imageLabel = Label(self.labelHead,
+        self.imageLabel = Label(self.Window,
                                bg="#17202A",
                                fg="#EAECEE",
-                               pady=5,image = self.fer_image)
+                               image = self.fer_image)
         self.imageLabel.place(relwidth=1,
-                             relx=0.35,
-                             rely=0.1)
+                             relx=0.0,
+                             rely=0.09, relheight = .25)
         
-        self.imageLabel.pack()
-        
-        # line between server info and chat output
-        self.line = Label(self.Window,
-                          width=450,
-                          bg="#ABB2B9")
- 
-        self.line.place(relwidth=1,
-                        rely=0.07,
-                        relheight=0.012)
-        
-
         # chat OUTPUT box ####
         self.textCons = Text(self.Window,
-                             width=20,
-                             height=2,
                              bg="#17202A",
                              fg="#EAECEE",
                              font="Helvetica 14",
                              padx=5,
                              pady=5)
  
-        self.textCons.place(relheight=0.745,
+        self.textCons.place(relheight=0.5,
                             relwidth=1,
-                            rely=0.08)
+                            rely=0.4)
         self.textCons.config(cursor="arrow") # respons to cursor keys
         self.textCons.config(state=DISABLED) # set startup state to disabled
 
@@ -337,7 +323,7 @@ class GUI:
                                 width=20,
                                 bg="#ABB2B9",
                                 command=lambda: self.sendButton(self.entryMsg.get("1.0","end")))
-        self.buttonMsg.pack() # activate the return binding
+        #self.buttonMsg.pack() # activate the return binding
         self.buttonMsg.place(relx=0.62,
                              rely=0.008,
                              relheight=0.06,
@@ -350,7 +336,7 @@ class GUI:
                                 width=20,
                                 bg="#ABB2B9",
                                 command=lambda: self.micButton())
-        self.micButtonMsg.pack() # activate the return binding
+        #self.micButtonMsg.pack() # activate the return binding
         self.micButtonMsg.place(relx=0.82,
                              rely=0.008,
                              relheight=0.06,
@@ -361,6 +347,7 @@ class GUI:
         scrollbar.place(relheight=1,
                         relx=0.974)
         scrollbar.config(command=self.textCons.yview)
+
  
 
     ############################################################################
