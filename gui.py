@@ -1,11 +1,12 @@
 # GUI implemented using: https://www.geeksforgeeks.org/gui-chat-application-using-tkinter-in-python/
+import os
+import time
 import socket
 from tkinter import *
-from chatHandler import ChatHandler
-import os
-import openai
-import time
 import tkinter.messagebox
+import openai
+from chatHandler import ChatHandler
+from DoSpeech import DoSpeech
 
 #############################################
 ############# IMPORTANT #####################
@@ -99,8 +100,20 @@ class GUI:
         self.userStartedTyping = False
         self.timeStartTyping = 0.0
         self.timeStopTyping = 0.0
-
         
+        self.userStartedSpeaking = False
+        self.timeStartSpeaking = 0.0
+        self.timeStopSpeaking = 0.0
+        
+        # "./harvard.wav" also testable
+        self.wavFile = "./english.wav" # the .wav file recording of the user speaking
+        # list of time slices [[start, stop],...] to analyze
+        self.timeSlices = [[None, None]] # [[None, None]] denotes full .wav file analysis
+
+        self.userSpeechDict = None # dictionary of proposed transcriptions
+        # [[self.r.recognize_google(audio),start,end],...]
+        self.userSpeech = None # list of best guess output of transcribed speech
+
         ####### more variables ######
         self.chatHandler = ChatHandler()
         self.name = '' # api-key variable... so poorly named... I'm sorry.... :(
@@ -132,7 +145,7 @@ class GUI:
         self.Window = Tk()
         self.Window.withdraw()
  
-        # login window
+        # LOGIN window setup #############################
         self.login = Toplevel()
         # set the title
         self.login.title("api-key and name")
@@ -204,7 +217,7 @@ class GUI:
 
         self.Window.mainloop()    
  
-    # The main layout of the chat
+    # CHAT window setup #######################
     def layout(self, name):
  
         self.name = name
@@ -216,6 +229,8 @@ class GUI:
         self.Window.configure(width=470,
                               height=550,
                               bg="#17202A")
+
+        # server information label ###
         if self.client != None:
             self.labelHead = Label(self.Window,
                                bg="#17202A",
@@ -231,6 +246,8 @@ class GUI:
                                font="Helvetica 13 bold",
                                pady=5)
         self.labelHead.place(relwidth=1)
+
+        # line between server info and chat output
         self.line = Label(self.Window,
                           width=450,
                           bg="#ABB2B9")
@@ -238,7 +255,8 @@ class GUI:
         self.line.place(relwidth=1,
                         rely=0.07,
                         relheight=0.012)
- 
+
+        # chat OUTPUT box ####
         self.textCons = Text(self.Window,
                              width=20,
                              height=2,
@@ -251,36 +269,32 @@ class GUI:
         self.textCons.place(relheight=0.745,
                             relwidth=1,
                             rely=0.08)
- 
+        self.textCons.config(cursor="arrow") # respons to cursor keys
+        self.textCons.config(state=DISABLED) # set startup state to disabled
+
+        # setup space for chat input and send button
         self.labelBottom = Label(self.Window,
                                  bg="#ABB2B9",
                                  height=80)
  
         self.labelBottom.place(relwidth=1,
                                rely=0.825)
- 
+        # chat INPUT box ####
         self.entryMsg = Text(self.labelBottom,
                               bg="#2C3E50",
                               fg="#EAECEE",
                               font="Helvetica 13")
- 
-        # place the given widget
-        # into the gui window
-        self.entryMsg.place(relwidth=0.74,
+        self.entryMsg.place(relwidth=0.72,
                             relheight=0.06,
                             rely=0.008,
                             relx=0.011)
- 
         self.entryMsg.focus()
         
         # create a Send Button
         # make it respond to 'ctrl+return' too.
         self.Window.bind("<Shift-Return>", lambda e: self.sendButton(self.entryMsg.get("1.0","end")))
         self.Window.bind("<Escape>",self.closeApp)
-
         self.Window.bind("<Key>", self.keyPressedEvent)
-
-        
         self.buttonMsg = Button(self.labelBottom,
                                 text="Send",
                                 font="Helvetica 10 bold",
@@ -288,28 +302,99 @@ class GUI:
                                 bg="#ABB2B9",
                                 command=lambda: self.sendButton(self.entryMsg.get("1.0","end")))
         self.buttonMsg.pack() # activate the return binding
-        self.buttonMsg.place(relx=0.77,
+        self.buttonMsg.place(relx=0.62,
                              rely=0.008,
                              relheight=0.06,
-                             relwidth=0.22)
+                             relwidth=0.16)
  
-        self.textCons.config(cursor="arrow")
+        # create a microphone Button
+        self.micButtonMsg = Button(self.labelBottom,
+                                text="push\nto\nrecord",
+                                font="Helvetica 10 bold",
+                                width=20,
+                                bg="#ABB2B9",
+                                command=lambda: self.micButton())
+        self.micButtonMsg.pack() # activate the return binding
+        self.micButtonMsg.place(relx=0.82,
+                             rely=0.008,
+                             relheight=0.06,
+                             relwidth=0.16)
  
         # create a scroll bar
         scrollbar = Scrollbar(self.textCons)
- 
-        # place the scroll bar
-        # into the gui window
         scrollbar.place(relheight=1,
                         relx=0.974)
- 
         scrollbar.config(command=self.textCons.yview)
  
-        self.textCons.config(state=DISABLED)
-        
+
+    ############################################################################
+    ##          End of layout 
+    ##          Begin functionality
+
+    def micButton(self):
+        # if user starts speaking
+        if self.userStartedSpeaking == False:
+            self.timeStartSpeaking = time.time()
+            self.userStartedSpeaking = True
+            self.clearInputBox()
+            self.entryMsg.config(state=DISABLED)
+            self.buttonMsg.config(state=DISABLED)
+            
+            # start recording .wav file of user speaking
+            self.startRecordingUser()
+            
+            print("user started speaking at: ", self.timeStartSpeaking)
+            self.micButtonMsg["text"]="push\nto\nstop"
+        else: # user stops speaking
+            self.timeStopSpeaking = time.time()
+            self.userStartedSpeaking = False
+            self.buttonMsg.config(state=NORMAL)
+            
+            # stop recording .wav file of user speaking
+            self.stopRecordingUser()
+            
+            print("user stopped speaking at: ", self.timeStopSpeaking)
+            self.micButtonMsg["text"] = "push\nto\nrecord"
+            print()
+
+            # do speech analysis and output results to the chat box
+            self.analyzeSpeech()
+            #print(self.userSpeech)
+            
+            self.entryMsg.config(state=NORMAL)
+            self.entryMsg.insert(END, self.userSpeech[0][0] + "\n")
+            self.entryMsg.config(state=DISABLED)
+            self.entryMsg.see(END) # moves to the end of the message (e.g., for insertion)
+            
+    def startRecordingUser(self):
+        pass
+
+    def stopRecordingUser(self):
+        pass
+
+    def clearInputBox(self):
+        self.entryMsg.config(state=NORMAL)
+        self.entryMsg.delete('1.0', 'end')
+        #self.entryMsg.config(state=DISABLED)
+            
+    def analyzeSpeech(self):
+        # tries to recognize the speech in self.wavFile between self.timeSlices
+        # and returns self.userSpeech string output (not the time slices)
+        # if self.timeSlices == [None, None], it will analyze the full .wav file
+        try:
+            y = DoSpeech(verbose = False) # free service for now... has limits.
+            y.recognizeSpeechFromFile(self.wavFile, self.timeSlices)#,timeSlices=[[1.6, 3.987664],[None,None]])
+            self.userSpeechDict = y.outputDict
+            self.userSpeech = y.output
+            return(self.userSpeech[0][0])
+        except:
+            print("\nproblem with analyzeSpeech()....\n")
+            
     def keyPressedEvent(self, event):
+        if self.entryMsg.cget('state') == 'disabled':
+            return
         if event.keysym != "Shift_R" and event.keysym != "Shift_L":
-            if self.userStartedTyping == False:
+            if self.userStartedTyping == False and self.entryMsg.cget('state') != 'disabled':
                 self.userStartedTyping = True
                 self.timeStartTyping = time.time()
                 print("user started typing at: ", self.timeStartTyping)
@@ -383,6 +468,8 @@ class GUI:
     def sendButton(self, msg): # also gets called with binding (e.g., <Shift-Return>)
         self.textCons.config(state=DISABLED)
         self.msg = msg
+        self.entryMsg.config(state = NORMAL)
+        
         self.userStartedTyping = False # user has sent a message and has not yet started typing again
         self.timeStopTyping = time.time()
         print("user stopped typing at: ", self.timeStopTyping)
@@ -391,7 +478,7 @@ class GUI:
         if self.commandPrefix not in self.msg:
             # get emotion, augmentation, compose with msg, and get response
             self.composeAugMsg()
-            self.entryMsg.delete('1.0', 'end') # clean up
+            self.clearInputBox()
             if self.useAugmentation:
                 self.getLLMResponse(query = self.augMsg)
             else:
