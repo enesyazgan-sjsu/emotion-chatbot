@@ -42,6 +42,10 @@ Run VideoStream.py in one terminal. Then, run Gui.py in another terminal.
 
 VideoStream.py creates a server and runs FER on a continuous webcam stream, sending the result of the FER for each captured frame to its client application, gui.py
 
+### If you have trouble installing dependancies for DoSpeech.py ###
+Uncomment the code at the top of DoSpeech.py for initial run, it will 
+install dependancies on your system for you. (then you can re-comment it out 
+because it takes a long time)
 #######################################
 ## FUNCTIONS
 #######################################
