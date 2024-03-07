@@ -5,6 +5,7 @@ from chatHandler import ChatHandler
 import os
 import openai
 import time
+import tkinter.messagebox
 
 #############################################
 ############# IMPORTANT #####################
@@ -13,19 +14,34 @@ import time
 # to use as a key.
 #   Set one. You may have to restart your IDE afterward.
 #        Please use this command in a cmd prompt:
-# setx OPENAI_API_KEY “<yourkey>”
+#
+#           setx OPENAI_API_KEY “<yourkey>”
+#
+# Alternatively, if you enter a key in at the login screen,
+# I will try to set it as a environment variable on your system
+# for you (and future logins, you can just press return to skip)
 
 try:
     #openai.api_key = os.environ["OPENAI_API_KEY"]
+    #raise Exception("testing api-key finding system...")
     key = os.environ["OPENAI_API_KEY"]
 except Exception as e:
     print("NO KEY ENVIRONMENT VARIABLE FOUND, PLEASE INPUT AT LOGIN.")
     print(e)
+    errorKeyWin = Tk()
+    errorKeyWin.wm_withdraw()
+    tkinter.messagebox.showinfo(title="No API KEY found...", \
+                                message='''No api-key for the chat system was found in your systems' environmental variables.\n\n
+Please enter a valid api-key at the login window, or the chat system will not work.\n\n
+The api-key entered will be saved on your system so next time you will not need to do this.\n\n \
+                                        Thankyou.\n''')
+    errorKeyWin.destroy()
 
 
 # run videostream_loop.py in a cmd window before you run this
 useServer = False # set to false to run GUI only
 
+# This will attempt to run the server for you in a (new) cmd window... please wait.
 try:
     pathToVideoStreamLoop = 'start python ./videostream_loop.py' 
     if useServer:
@@ -124,6 +140,10 @@ class GUI:
                              height=True)
         self.login.configure(width=800,
                              height=300)
+        # send the login window to the front
+        self.login.attributes("-topmost",True)
+        self.login.grab_set()
+        self.login.focus()
         # create a Label for api-key
         self.pls = Label(self.login,
                          text="Please enter an api-key (or leave it blank to skip).\nThis will set the key as an environmental variable\n on your system if possible.",
@@ -168,6 +188,7 @@ class GUI:
         # along with action
         # make this button respond to 'return' as well
         self.login.bind("<Return>", lambda e: self.beginChat(self.entryName.get(), userName = self.entryUserName.get()))
+        self.login.bind("<Escape>",self.closeLoginWindow)
 
         self.go = Button(self.login,
                          text="CONTINUE",
@@ -294,6 +315,10 @@ class GUI:
                 print("user started typing at: ", self.timeStartTyping)
 
     def closeApp(self, event):
+        self.Window.destroy()
+
+    def closeLoginWindow(self, event):
+        self.login.destroy()
         self.Window.destroy()
 
     def beginChat(self, name, userName = ':'): #############################
