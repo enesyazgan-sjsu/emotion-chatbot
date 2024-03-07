@@ -368,6 +368,14 @@ class GUI:
             
             print("user started speaking at: ", self.timeStartSpeaking)
             self.micButtonMsg["text"]="push\nto\nstop"
+
+            ################################################################################
+            # temporarily only gets input from mic and does not record #####################
+            self.analyzeSpeech(fromFile = False)
+            self.userStartedSpeaking = True
+            self.micButton()
+            ################################################################################
+            
         else: # user stops speaking
             self.timeStopSpeaking = time.time()
             self.userStartedSpeaking = False
@@ -381,7 +389,8 @@ class GUI:
             print()
 
             # do speech analysis and output results to the chat box
-            self.analyzeSpeech()
+            # TEMPORARILY DISABLED UNTIL RECORDING IS A THING
+            #self.analyzeSpeech(fromFile = True)
             #print(self.userSpeech)
             
             self.entryMsg.config(state=NORMAL)
@@ -400,13 +409,16 @@ class GUI:
         self.entryMsg.delete('1.0', 'end')
         #self.entryMsg.config(state=DISABLED)
             
-    def analyzeSpeech(self):
+    def analyzeSpeech(self, fromFile = False):
         # tries to recognize the speech in self.wavFile between self.timeSlices
         # and returns self.userSpeech string output (not the time slices)
         # if self.timeSlices == [None, None], it will analyze the full .wav file
         try:
             y = DoSpeech(verbose = False) # free service for now... has limits.
-            y.recognizeSpeechFromFile(self.wavFile, self.timeSlices)#,timeSlices=[[1.6, 3.987664],[None,None]])
+            if fromFile == False:
+                y.recognizeSpeechFromMic()
+            else:
+                y.recognizeSpeechFromFile(self.wavFile, self.timeSlices)#,timeSlices=[[1.6, 3.987664],[None,None]])
             self.userSpeechDict = y.outputDict
             self.userSpeech = y.output
             return(self.userSpeech[0][0])
