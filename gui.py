@@ -7,6 +7,7 @@ import tkinter.messagebox
 import openai
 from chatHandler import ChatHandler
 from DoSpeech import DoSpeech
+from PIL import Image, ImageTk
 
 #############################################
 ############# IMPORTANT #####################
@@ -50,6 +51,7 @@ try:
         # run videostream_loop.py
         import subprocess
         import sys
+        #serverProcess = subprocess.Popen(pathToVideoStreamLoop, stdout=subprocess.PIPE, shell=True) 
         subprocess.Popen(pathToVideoStreamLoop, shell=True) 
         print("waiting for server to start...")
         time.sleep(10)
@@ -93,10 +95,13 @@ class GUI:
             self.usingServer = False
         else:
             self.usingServer = True
+            #self.serverProcess = p
         self.client = client
         self.terminator = "#"
         self.chat_started = False
         self.fer_result = "None"
+        self.fer_image = './startImage.jpg' # image to display for a given fer_result
+        self.startImage = './startImage.jpg' # image to display for a given fer_result
         self.userStartedTyping = False
         self.timeStartTyping = 0.0
         self.timeStopTyping = 0.0
@@ -132,6 +137,14 @@ class GUI:
             'Fear':["(Reply as if I am really scared)"],
             'Disgust':["(Reply as if I am really disgusted)"],
             'Angry':["(Reply as if I am really angry)"]}
+        self.imageDict = {'None': './startImage.jpg',
+            'Neutral':'./startImage.jpg',
+            'Happy':'./startImage.jpg', 
+            'Sad':'./startImage.jpg',
+            'Surprise':'./startImage.jpg',
+            'Fear':'./startImage.jpg',
+            'Disgust':'./startImage.jpg',
+            'Angry':'./startImage.jpg'}
 
         self.commandPrefix = "%%%" # prefix to enter a command to the system (see sendButton())
         # dictionary of available commanable variables and their values
@@ -245,7 +258,7 @@ class GUI:
                                text="No Server Detected... no emotions will be added.",
                                font="Helvetica 13 bold",
                                pady=5)
-        self.labelHead.place(relwidth=1)
+        self.labelHead.place(relwidth=1,relheight=.1)
 
         # line between server info and chat output
         self.line = Label(self.Window,
@@ -255,6 +268,29 @@ class GUI:
         self.line.place(relwidth=1,
                         rely=0.07,
                         relheight=0.012)
+
+        # emotion image zone
+        self.fer_image = Image.open(self.startImage)
+        self.fer_image = ImageTk.PhotoImage(self.fer_image)
+        self.imageLabel = Label(self.labelHead,
+                               bg="#17202A",
+                               fg="#EAECEE",
+                               pady=5,image = self.fer_image)
+        self.imageLabel.place(relwidth=1,
+                             relx=0.35,
+                             rely=0.1)
+        
+        self.imageLabel.pack()
+        
+        # line between server info and chat output
+        self.line = Label(self.Window,
+                          width=450,
+                          bg="#ABB2B9")
+ 
+        self.line.place(relwidth=1,
+                        rely=0.07,
+                        relheight=0.012)
+        
 
         # chat OUTPUT box ####
         self.textCons = Text(self.Window,
@@ -401,6 +437,7 @@ class GUI:
 
     def closeApp(self, event):
         self.Window.destroy()
+        #self.serverProcess.kill() 
 
     def closeLoginWindow(self, event):
         self.login.destroy()
@@ -426,6 +463,8 @@ class GUI:
                 fer_list = [result for result in raw_message.split(self.terminator) if result != '']
                 self.fer_result = fer_list[-1]
                 self.labelHead.config(text="Detected Emotion: " + str(self.fer_result))
+                print("using...", self.imageDict[self.fer_result])
+                self.imageLabel.config(image=self.imageDict[self.fer_result])
             except:
                 print("no message from server")
                 self.labelHead.config(text="No Server Detected: " + str(self.fer_result))
