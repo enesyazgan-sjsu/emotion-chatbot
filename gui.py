@@ -109,6 +109,7 @@ class GUI:
         self.userStartedSpeaking = False
         self.timeStartSpeaking = 0.0
         self.timeStopSpeaking = 0.0
+        self.speakTrigger = [250,150] # frequency and duration of the "speak" tone trigger
         
         # "./harvard.wav" also testable
         self.wavFile = "./english.wav" # the .wav file recording of the user speaking
@@ -331,7 +332,7 @@ class GUI:
  
         # create a microphone Button
         self.micButtonMsg = Button(self.labelBottom,
-                                text="push\nto\nrecord",
+                                text="push\nto\nspeak",
                                 font="Helvetica 10 bold",
                                 width=20,
                                 bg="#ABB2B9",
@@ -385,7 +386,7 @@ class GUI:
             self.stopRecordingUser()
             
             print("user stopped speaking at: ", self.timeStopSpeaking)
-            self.micButtonMsg["text"] = "push\nto\nrecord"
+            self.micButtonMsg["text"] = "push\nto\nspeak"
             print()
 
             # do speech analysis and output results to the chat box
@@ -394,7 +395,10 @@ class GUI:
             #print(self.userSpeech)
             
             self.entryMsg.config(state=NORMAL)
-            self.entryMsg.insert(END, self.userSpeech[0][0] + "\n")
+            try:
+                self.entryMsg.insert(END, self.userSpeech[0][0] + "\n")
+            except:
+                pass # voice recognition didn?t work
             self.entryMsg.config(state=DISABLED)
             self.entryMsg.see(END) # moves to the end of the message (e.g., for insertion)
             
@@ -416,7 +420,7 @@ class GUI:
         try:
             y = DoSpeech(verbose = False) # free service for now... has limits.
             if fromFile == False:
-                y.recognizeSpeechFromMic()
+                self.wavFile = y.recognizeSpeechFromMic(self.speakTrigger) # send a freq and duration of 500 and 250 to trigger speaking
             else:
                 y.recognizeSpeechFromFile(self.wavFile, self.timeSlices)#,timeSlices=[[1.6, 3.987664],[None,None]])
             self.userSpeechDict = y.outputDict

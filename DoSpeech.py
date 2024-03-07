@@ -21,6 +21,7 @@ install('pyaudio')
 import speech_recognition as sr
 import time
 from os import path
+import winsound
 
 class DoSpeech:
     
@@ -88,12 +89,16 @@ class DoSpeech:
             print()
         print()
 
-    def recognizeSpeechFromMic(self):
+    def recognizeSpeechFromMic(self, trigger = None):
         # process microphone input
         # obtain audio from the microphone
         # sr.Microphone(device_index=0) for specific device (find index above)
         with sr.Microphone() as source:
-            print("Say something!")
+            if trigger != None:
+                try:
+                    winsound.Beep(trigger[0], trigger[1]) # freq and duration
+                except:
+                    pass
             audio = self.r.listen(source)
 
         if self.verbose:
@@ -102,7 +107,7 @@ class DoSpeech:
         if self.verbose:
             print(self.msTime())
         print()
-
+        return(audio)
 
 
 #y = DoSpeech()
