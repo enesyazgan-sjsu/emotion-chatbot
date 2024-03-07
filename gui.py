@@ -412,7 +412,14 @@ class GUI:
         self.entryMsg.config(state=NORMAL)
         self.entryMsg.delete('1.0', 'end')
         #self.entryMsg.config(state=DISABLED)
-            
+
+    def convertAudioDataToWavFile(self, audio, filename = "./test.wav"):
+        with  open(filename, "wb") as f:
+            f.write(audio.get_wav_data())
+        return(filename)
+                   
+
+
     def analyzeSpeech(self, fromFile = False):
         # tries to recognize the speech in self.wavFile between self.timeSlices
         # and returns self.userSpeech string output (not the time slices)
@@ -420,7 +427,12 @@ class GUI:
         try:
             y = DoSpeech(verbose = False) # free service for now... has limits.
             if fromFile == False:
-                self.wavFile = y.recognizeSpeechFromMic(self.speakTrigger) # send a freq and duration of 500 and 250 to trigger speaking
+                try:
+                    audioDataOutput = y.recognizeSpeechFromMic(self.speakTrigger) # send a freq and duration of 500 and 250 to trigger speaking
+                    self.wavFile = self.convertAudioDataToWavFile(audioDataOutput)
+                except Exception as e:
+                    print("problem with analyze speech...")
+                    print(e)
             else:
                 y.recognizeSpeechFromFile(self.wavFile, self.timeSlices)#,timeSlices=[[1.6, 3.987664],[None,None]])
             self.userSpeechDict = y.outputDict
