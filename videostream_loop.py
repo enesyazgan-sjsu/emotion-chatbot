@@ -57,7 +57,8 @@ class FERServer(asynchat.async_chat):
         self.set_terminator(self.terminator)
         
         self.run_fer_loop(frame_cap=None)
-    
+        self.saveImagesPath = "./"
+        
     def preprocess_webcam_image(self, image, width, height):
         image = Image.fromarray(image)
         data_transforms = transforms.Compose([
@@ -88,8 +89,11 @@ class FERServer(asynchat.async_chat):
                 captured_frames+=1
                 
                 #save original webcam image
-                cv2.imwrite("./dbg/Full_webcam_frame.png", frame)
-                
+                try:
+                    cv2.imwrite("./Full_webcam_frame.png", frame)
+                except Exception as e:
+                    print(e)
+                    
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 
                 #extract face from frame with MTCNN
@@ -100,7 +104,8 @@ class FERServer(asynchat.async_chat):
                     
                     try:
                         im = Image.fromarray(face)
-                        im.save("./dbg/Cropped_40_frame.png")
+                        im.save("./Cropped_40_frame.png")
+                        #print(self.saveImagesPath) ################ why doesn't this work?!?!?
                     except Exception as e:
                         print(e)
 

@@ -41,24 +41,27 @@ The api-key entered will be saved on your system so next time you will not need 
 
 
 # run videostream_loop.py in a cmd window before you run this
-useServer = False # set to false to run GUI only
+useServer = True     # set to false to run GUI only
 
-# This will attempt to run the server for you in a (new) cmd window... please wait.
-try:
-    pathToVideoStreamLoop = 'start python ./videostream_loop.py' 
-    if useServer:
-        print("starting server...")
-        # run videostream_loop.py
-        import subprocess
-        import sys
-        #serverProcess = subprocess.Popen(pathToVideoStreamLoop, stdout=subprocess.PIPE, shell=True) 
-        subprocess.Popen(pathToVideoStreamLoop, shell=True) 
-        print("waiting for server to start...")
-        time.sleep(10)
-        print("done waiting...")
-except:
-    print("problem starting server... aborting server.")
-    useServer = False
+autoSpawnServer = True
+
+if autoSpawnServer == True:
+    # This will attempt to run the server for you in a (new) cmd window... please wait.
+    try:
+        pathToVideoStreamLoop = 'start python ./videostream_loop.py' 
+        if useServer:
+            print("starting server...")
+            # run videostream_loop.py
+            import subprocess
+            import sys
+            serverProcess = subprocess.Popen(pathToVideoStreamLoop, stdout=subprocess.PIPE, shell=True) 
+            #subprocess.Popen(pathToVideoStreamLoop, shell=True) 
+            print("waiting for server to start...")
+            time.sleep(10)
+            print("done waiting...")
+    except:
+        print("problem starting server... aborting server.")
+        useServer = False
 
 """
 Version 1.0 of Gui application.
@@ -93,15 +96,15 @@ class GUI:
         ###additional variables####
         if client == None:
             self.usingServer = False
+            self.serverProcess = None
         else:
             self.usingServer = True
-            #self.serverProcess = p
+            self.serverProcess = serverProcess
         self.client = client
         self.terminator = "#"
         self.chat_started = False
         self.fer_result = "None"
         self.fer_image = './startImage.jpg' # image to display for a given fer_result
-        self.startImage = './startImage.jpg' # image to display for a given fer_result
         self.userStartedTyping = False
         self.timeStartTyping = 0.0
         self.timeStopTyping = 0.0
@@ -138,14 +141,17 @@ class GUI:
             'Fear':["(Reply as if I am really scared)"],
             'Disgust':["(Reply as if I am really disgusted)"],
             'Angry':["(Reply as if I am really angry)"]}
-        self.imageDict = {'None': './startImage.jpg',
-            'Neutral':'./startImage.jpg',
-            'Happy':'./startImage.jpg', 
-            'Sad':'./startImage.jpg',
-            'Surprise':'./startImage.jpg',
-            'Fear':'./startImage.jpg',
-            'Disgust':'./startImage.jpg',
-            'Angry':'./startImage.jpg'}
+
+        self.imageFolder = "./emotionImages/"
+        self.startImage = self.imageFolder + 'startImage.jpg' # image to display for a given fer_result
+        self.imageDict = {'None': self.imageFolder+'startImage.jpg',
+            'Neutral':self.imageFolder+'Neutral.jpg',
+            'Happy':self.imageFolder+'Happy.jpg', 
+            'Sad':self.imageFolder+'Sad.jpg',
+            'Surprise':self.imageFolder+'Surprise.jpg',
+            'Fear':self.imageFolder+'Fear.jpg',
+            'Disgust':self.imageFolder+'Disgust.jpg',
+            'Angry':self.imageFolder+'Angry.jpg'}
 
         self.commandPrefix = "%%%" # prefix to enter a command to the system (see sendButton())
         # dictionary of available commanable variables and their values
@@ -271,6 +277,16 @@ class GUI:
                         relheight=0.012)
 
         # emotion image zone
+        # load the imageDict with PhotoImage objects for use later to update label image
+        for each in self.imageDict.keys():
+            try:
+                self.fer_image = Image.open(self.imageDict[each])
+                self.fer_image = ImageTk.PhotoImage(self.fer_image)
+                self.imageDict[each] = self.fer_image
+            except Exception as e:
+                print (e)
+                print("problem loading image: ", each, "...")
+
         self.fer_image = Image.open(self.startImage)
         self.fer_image = ImageTk.PhotoImage(self.fer_image)
         self.imageLabel = Label(self.Window,
@@ -478,11 +494,17 @@ class GUI:
                 fer_list = [result for result in raw_message.split(self.terminator) if result != '']
                 self.fer_result = fer_list[-1]
                 self.labelHead.config(text="Detected Emotion: " + str(self.fer_result))
-                print("using...", self.imageDict[self.fer_result])
-                self.imageLabel.config(image=self.imageDict[self.fer_result])
             except:
                 print("no message from server")
                 self.labelHead.config(text="No Server Detected: " + str(self.fer_result))
+            try:
+                #print("using...", self.fer_result)
+                #print("using...", self.imageDict[self.fer_result])
+                self.imageLabel.config(image=self.imageDict[self.fer_result])
+            except Exception as e:
+                print(e)
+                print("problem loading image onto label...")
+                pass
         self.Window.after(self.ferDelay, self.getCurrentFER)  # reschedule event in 2 seconds
  
     def getQueryAugmentation(self, index = 0):
