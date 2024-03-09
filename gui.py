@@ -41,7 +41,7 @@ The api-key entered will be saved on your system so next time you will not need 
 
 
 # run videostream_loop.py in a cmd window before you run this
-useServer = True     # set to false to run GUI only
+useServer = False     # set to false to run GUI only
 
 autoSpawnServer = True
 
@@ -143,15 +143,15 @@ class GUI:
             'Angry':["(Reply as if I am really angry)"]}
 
         self.imageFolder = "./emotionImages/"
-        self.startImage = self.imageFolder + 'startImage.jpg' # image to display for a given fer_result
-        self.imageDict = {'None': self.imageFolder+'startImage.jpg',
+        self.startImage = self.imageFolder + 'startImage.png' # image to display for a given fer_result
+        self.imageDict = {'None': self.imageFolder+'startImage.png',
             'Neutral':self.imageFolder+'Neutral.jpg',
             'Happy':self.imageFolder+'Happy.jpg', 
             'Sad':self.imageFolder+'Sad.jpg',
             'Surprise':self.imageFolder+'Surprise.jpg',
             'Fear':self.imageFolder+'Fear.jpg',
             'Disgust':self.imageFolder+'Disgust.jpg',
-            'Angry':self.imageFolder+'Angry.jpg'}
+            'Angry':self.imageFolder+'Angry.png'}
 
         self.commandPrefix = "%%%" # prefix to enter a command to the system (see sendButton())
         # dictionary of available commanable variables and their values
@@ -164,15 +164,43 @@ class GUI:
         # chat window which is currently hidden
         self.Window = Tk()
         self.Window.withdraw()
+        # center it
+        screenWidth = self.Window.winfo_screenwidth()
+        screenHeight = self.Window.winfo_screenheight()
+        winXpos = int((screenWidth-50)/2)
+        winYpos = int(((screenHeight-50)/2)-50)#subtract a little for quick start bar
+        if winYpos < 0:
+            winYpos = 0
+        if winXpos < 0:
+            winXpos = 0
+        geoString = str(50)+"x"+str(50)+ \
+                        "+"+str(winXpos)+"+"+str(winYpos)
+        self.Window.geometry(geoString)
  
         # LOGIN window setup #############################
         self.login = Toplevel()
+
+        self.loginWidth = 800
+        self.loginHeight = 300
         # set the title
         self.login.title("api-key and name")
         self.login.resizable(width=True,
                              height=True)
-        self.login.configure(width=800,
-                             height=300)
+        self.login.configure(width=self.loginWidth,
+                             height=self.loginHeight)
+        # center it
+        screenWidth = self.login.winfo_screenwidth()
+        screenHeight = self.login.winfo_screenheight()
+        winXpos = int((screenWidth-self.loginWidth)/2)
+        winYpos = int(((screenHeight-self.loginHeight)/2)-50)#subtract a little for quick start bar
+        if winYpos < 0:
+            winYpos = 0
+        if winXpos < 0:
+            winXpos = 0
+        geoString = str(self.loginWidth)+"x"+str(self.loginHeight)+ \
+                        "+"+str(winXpos)+"+"+str(winYpos)
+        self.login.geometry(geoString)
+
         # send the login window to the front
         self.login.attributes("-topmost",True)
         self.login.grab_set()
@@ -190,10 +218,10 @@ class GUI:
         self.entryName = Entry(self.login,
                                font="Helvetica 14")
  
-        self.entryName.place(relwidth=0.65,
+        self.entryName.place(relwidth=0.57,
                              relheight=0.1,
-                             relx=0.1,
-                             rely=0.35)
+                             relx=0.2,
+                             rely=0.37)
  
         # create a Label for user name
         self.labelName = Label(self.login,
@@ -202,17 +230,17 @@ class GUI:
                                font="Helvetica 12")
  
         self.labelName.place(relheight=0.15,
-                             relx=0.1,
+                             relx=0.3,
                              rely=0.5)
 
         # create a entry box for user name 
         self.entryUserName = Entry(self.login,
                                font="Helvetica 14")
  
-        self.entryUserName.place(relwidth=0.4,
+        self.entryUserName.place(relwidth=0.2,
                              relheight=0.12,
-                             relx=0.35,
-                             rely=0.6)
+                             relx=0.37,
+                             rely=0.62)
  
         # set the focus of the cursor on the api-key box (also responds to return)
         self.entryName.focus()
@@ -227,7 +255,7 @@ class GUI:
                          text="CONTINUE",
                          font="Helvetica 14 bold",
                          command=lambda: self.beginChat(self.entryName.get(), userName = self.entryUserName.get()))
-        self.go.pack() # activate the return binding
+        #self.go.pack() # activate the return binding
         
         self.go.place(relx=0.4,
                       rely=0.8)
@@ -238,7 +266,7 @@ class GUI:
         self.Window.mainloop()    
  
     # CHAT window setup #######################
-    def layout(self, name):
+    def layout(self, name, chatWinWidth = 470, chatWinHeight=550):
  
         self.name = name
         # to show chat window
@@ -246,10 +274,22 @@ class GUI:
         self.Window.title("CHATROOM")
         self.Window.resizable(width=True,
                               height=True)
-        self.Window.configure(width=470,
-                              height=550,
+        self.Window.configure(width=chatWinWidth,
+                              height=chatWinHeight,
                               bg="#17202A")
-
+        # center it
+        screenWidth = self.Window.winfo_screenwidth()
+        screenHeight = self.Window.winfo_screenheight()
+        winXpos = int((screenWidth-chatWinWidth)/2)
+        winYpos = int(((screenHeight-chatWinHeight)/2)-50)#subtract a little for quick start bar
+        if winYpos < 0:
+            winYpos = 0
+        if winXpos < 0:
+            winXpos = 0
+        geoString = str(chatWinWidth)+"x"+str(chatWinHeight)+ \
+                        "+"+str(winXpos)+"+"+str(winYpos)
+        self.Window.geometry(geoString)
+        
         # server information label ###
         if self.client != None:
             self.labelHead = Label(self.Window,
@@ -295,7 +335,7 @@ class GUI:
                                image = self.fer_image)
         self.imageLabel.place(relwidth=1,
                              relx=0.0,
-                             rely=0.09, relheight = .25)
+                             rely=0.09, relheight = .20)
         
         # chat OUTPUT box ####
         self.textCons = Text(self.Window,
@@ -307,7 +347,7 @@ class GUI:
  
         self.textCons.place(relheight=0.5,
                             relwidth=1,
-                            rely=0.4)
+                            rely=0.3)
         self.textCons.config(cursor="arrow") # respons to cursor keys
         self.textCons.config(state=DISABLED) # set startup state to disabled
 
@@ -323,7 +363,7 @@ class GUI:
                               bg="#2C3E50",
                               fg="#EAECEE",
                               font="Helvetica 13")
-        self.entryMsg.place(relwidth=0.72,
+        self.entryMsg.place(relwidth=0.7,
                             relheight=0.06,
                             rely=0.008,
                             relx=0.011)
@@ -341,10 +381,10 @@ class GUI:
                                 bg="#ABB2B9",
                                 command=lambda: self.sendButton(self.entryMsg.get("1.0","end")))
         #self.buttonMsg.pack() # activate the return binding
-        self.buttonMsg.place(relx=0.62,
+        self.buttonMsg.place(relx=0.72,
                              rely=0.008,
                              relheight=0.06,
-                             relwidth=0.16)
+                             relwidth=0.14)
  
         # create a microphone Button
         self.micButtonMsg = Button(self.labelBottom,
@@ -354,14 +394,14 @@ class GUI:
                                 bg="#ABB2B9",
                                 command=lambda: self.micButton())
         #self.micButtonMsg.pack() # activate the return binding
-        self.micButtonMsg.place(relx=0.82,
+        self.micButtonMsg.place(relx=0.89,
                              rely=0.008,
                              relheight=0.06,
-                             relwidth=0.16)
+                             relwidth=0.1)
  
         # create a scroll bar
         scrollbar = Scrollbar(self.textCons)
-        scrollbar.place(relheight=1,
+        scrollbar.place(relheight=.95,
                         relx=0.974)
         scrollbar.config(command=self.textCons.yview)
 
