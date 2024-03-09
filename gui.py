@@ -41,7 +41,7 @@ The api-key entered will be saved on your system so next time you will not need 
 
 
 # run videostream_loop.py in a cmd window before you run this
-useServer = False     # set to false to run GUI only
+useServer = True     # set to false to run GUI only
 
 autoSpawnServer = True
 
