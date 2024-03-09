@@ -9,6 +9,15 @@ from chatHandler import ChatHandler
 from DoSpeech import DoSpeech
 from PIL import Image, ImageTk
 
+
+
+# run videostream_loop.py in a cmd window before you run this
+# or have autoSpawnServer try to run it for you
+useServer = True     # set to false to run GUI only
+
+autoSpawnServer = True # set false to run the server yourself
+
+
 #############################################
 ############# IMPORTANT #####################
 #############################################
@@ -40,10 +49,6 @@ The api-key entered will be saved on your system so next time you will not need 
     errorKeyWin.destroy()
 
 
-# run videostream_loop.py in a cmd window before you run this
-useServer = True     # set to false to run GUI only
-
-autoSpawnServer = True
 
 if autoSpawnServer == True:
     # This will attempt to run the server for you in a (new) cmd window... please wait.
@@ -132,25 +137,26 @@ class GUI:
         self.msg = '' # the original message typed in
         self.showAugmentation = True # output the emotional augmentation being used
         self.useAugmentation = True # set to False to not use emotional augmentation
-        self.ferDelay = 500 
-        self.aug_dict = {'None':[""],
-            'Neutral':["(Reply as if I have a neutral facial expression)"],
-            'Happy':["(Reply as if I am really happy)"], 
-            'Sad':["(Reply as if I am really sad)"],
-            'Surprise':["(Reply as if I am really surprised)"],
-            'Fear':["(Reply as if I am really scared)"],
-            'Disgust':["(Reply as if I am really disgusted)"],
-            'Angry':["(Reply as if I am really angry)"]}
+        self.ferDelay = 500
+        self.EARindex = 0 # which in the list of augmentations to use
+        self.aug_dict = {'None':["",""],
+            'Neutral':["(Reply as if I have a neutral facial expression)","(I am neutral now.)"],
+            'Happy':["(Reply as if I am really happy)","(I am happy now.)"], 
+            'Sad':["(Reply as if I am really sad)","(I am sad now.)"],
+            'Surprise':["(Reply as if I am really surprised)","(I am surprised now.)"],
+            'Fear':["(Reply as if I am really scared)","(I am scared now.)"],
+            'Disgust':["(Reply as if I am really disgusted)","(I am disgusted now.)"],
+            'Angry':["(Reply as if I am really angry)","(I am angry now.)"]}
 
         self.imageFolder = "./emotionImages/"
         self.startImage = self.imageFolder + 'startImage.png' # image to display for a given fer_result
         self.imageDict = {'None': self.imageFolder+'startImage.png',
-            'Neutral':self.imageFolder+'Neutral.jpg',
-            'Happy':self.imageFolder+'Happy.jpg', 
-            'Sad':self.imageFolder+'Sad.jpg',
-            'Surprise':self.imageFolder+'Surprise.jpg',
-            'Fear':self.imageFolder+'Fear.jpg',
-            'Disgust':self.imageFolder+'Disgust.jpg',
+            'Neutral':self.imageFolder+'Neutral.png',
+            'Happy':self.imageFolder+ 'Happy.png', 
+            'Sad':self.imageFolder+ 'Sad.png',
+            'Surprise':self.imageFolder+'Surprise.png',
+            'Fear':self.imageFolder+'Fear.png',
+            'Disgust':self.imageFolder+'Disgust.png',
             'Angry':self.imageFolder+'Angry.png'}
 
         self.commandPrefix = "%%%" # prefix to enter a command to the system (see sendButton())
@@ -333,6 +339,7 @@ class GUI:
                                bg="#17202A",
                                fg="#EAECEE",
                                image = self.fer_image)
+        self.imageLabel['bg']=self.imageLabel.master['bg']
         self.imageLabel.place(relwidth=1,
                              relx=0.0,
                              rely=0.09, relheight = .20)
@@ -547,9 +554,12 @@ class GUI:
                 pass
         self.Window.after(self.ferDelay, self.getCurrentFER)  # reschedule event in 2 seconds
  
-    def getQueryAugmentation(self, index = 0):
+    def getQueryAugmentation(self, index = None):
+        if index != None:
+            self.EARindex = index
+        
         if self.fer_result in self.aug_dict:
-            self.queryAug = self.aug_dict[self.fer_result][index]
+            self.queryAug = self.aug_dict[self.fer_result][self.EARindex]
         else:
             self.queryAug = None
 
