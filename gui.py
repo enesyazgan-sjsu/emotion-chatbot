@@ -118,8 +118,9 @@ class GUI:
         self.fer_result = "None" # str(emotion)
         self.fer_image = './startImage.jpg' # image to display for a given fer_result
         # setup time slices and multiple emotions in EAR
-        self.useMultEAR = True # use multiple emotions in EAR 
         self.useSpeakType = 'type' # 'speak' or 'type' to choose which input to use
+
+        self.useMultEAR = True # use multiple emotions in EAR 
         
         self.userStartedTyping = False
         self.timeStartTyping = 0.0
@@ -150,8 +151,8 @@ class GUI:
         self.msg = '' # the original message typed in
         self.showAugmentation = True # output the emotional augmentation being used
         self.useAugmentation = True # set to False to not use emotional augmentation
-        self.ferDelay = 500
-        self.EARindex = 0 # which in the list of augmentations to use
+        self.ferDelay = 7500
+        self.EARindex = 1 # which in the list of augmentations to use
         self.aug_dict = {'None':["",""],
             'Neutral':["(Reply as if I have a neutral facial expression)","(I am neutral now.)"],
             'Happy':["(Reply as if I am really happy)","(I am happy now.)"], 
@@ -637,20 +638,54 @@ class GUI:
 
         return self.queryAug
 
-    def getMultQueryAugmentation(self, index = None):
+    def composeMultQueryAugMsg(self, index = None):
+        # self.useMultEAR == True will use multiple emotions within a query
+        # return msg with emotional augmentations per interval
         if index != None: # index into augmentation dictionary
             self.EARindex = index
-        # self.useMultEAR == True will use multiple emotions within a query
-
+        finalMsg = ""
+        ferList = [] # list of emotions per input session
+        epi = 0 # emotions per input session
+        startTime = 0.0
+        endTime = 0.0
         # determine how many emotions were reported during input
-        # divide self.msg into same number of pieces (assume uniform division)
+        if self.useSpeakType == 'type':
+            startTime = float(self.timeStartTyping)
+            endTime = float(self.timeStopTyping)
+        else:
+            startTime = float(self.timeStartSpeaking)
+            endTime = float(self.timeStopSpeaking)
+            
+        for each in self.ferHistResults:
+            if float(each[1]) >= startTime and float(each[1]) <= endTime:
+                ferList.append(each)
+                        
+        # split input message into pieces of fraction size
+        listOfWordsInMsg = self.msg.split(' ') # default to space separations
+        if len(ferList) == 0.0:
+            ferList.append(['None', str(self.endTime)]) # filler in the case of no fer
+        wordsPerEmotion = int(len(listOfWordsInMsg) / len(ferList))
+
+        wordIndex = 0
         # get augmentations for each and stitch together
+        for eachEmotion in ferList: # ['Happy', '283746782.62738']
+            finalMsg = finalMsg + ' ' + self.aug_dict[eachEmotion[0]][self.EARindex]
+            for eachWord in range(wordIndex, wordIndex + wordsPerEmotion):
+                try:
+                    finalMsg = finalMsg + ' ' + listOfWordsInMsg[eachWord]
+                except:
+                    pass # numbers didn't line up, passed the end of the message
+            wordIndex = wordIndex + wordsPerEmotion
+        finalMsg = finalMsg + "\n\n"
         # return complete multiple EAR response
- 
+        return(finalMsg)
         
     def composeAugMsg(self):
-        self.getQueryAugmentation()
-        self.augMsg = self.queryAug + " " + self.msg
+        if self.useMultEAR:
+            self.augMsg = self.composeMultQueryAugMsg()
+        else:
+            self.getQueryAugmentation()
+            self.augMsg = self.queryAug + " " + self.msg
         return self.augMsg
 
     def setAugDisplay(self, value): # show or hide augmentation from user
