@@ -89,7 +89,7 @@ class DoSpeech:
             print()
         print()
 
-    def recognizeSpeechFromMic(self, trigger = None):
+    def recognizeSpeechFromMic(self, trigger = None, timeout = 3):
         # process microphone input
         # obtain audio from the microphone
         # sr.Microphone(device_index=0) for specific device (find index above)
@@ -99,7 +99,7 @@ class DoSpeech:
                     winsound.Beep(trigger[0], trigger[1]) # freq and duration
                 except:
                     pass
-            audio = self.r.listen(source)
+            audio = self.r.listen(source, timeout=3)
 
         if self.verbose:
             print(self.msTime())

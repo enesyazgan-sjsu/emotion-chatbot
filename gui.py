@@ -113,9 +113,14 @@ class GUI:
         self.terminator = "#" # between time stamp and next emotion
         self.termTime = "%" # between emotion and time stamp
         self.chat_started = False
+        # emotional results variables
         self.ferHistResults = [] # history or results [[str(emotion), str(timeStamp)],...]
         self.fer_result = "None" # str(emotion)
         self.fer_image = './startImage.jpg' # image to display for a given fer_result
+        # setup time slices and multiple emotions in EAR
+        self.useMultEAR = True # use multiple emotions in EAR 
+        self.useSpeakType = 'type' # 'speak' or 'type' to choose which input to use
+        
         self.userStartedTyping = False
         self.timeStartTyping = 0.0
         self.timeStopTyping = 0.0
@@ -124,19 +129,21 @@ class GUI:
         self.timeStartSpeaking = 0.0
         self.timeStopSpeaking = 0.0
         self.speakTrigger = [250,150] # frequency and duration of the "speak" tone trigger
+        self.nothingWasHeard = False # marks when no speech was heard
         
         # "./harvard.wav" also testable
         self.wavFile = "./english.wav" # the .wav file recording of the user speaking
         # list of time slices [[start, stop],...] to analyze
         self.timeSlices = [[None, None]] # [[None, None]] denotes full .wav file analysis
 
-        self.userSpeechDict = None # dictionary of proposed transcriptions
+        self.userSpeechDict = None # dictionary of GoogleSpeech proposed transcriptions
         # [[self.r.recognize_google(audio),start,end],...]
         self.userSpeech = None # list of best guess output of transcribed speech
+        self.speechTimeout = 3 # seconds speech analyzer will wait for speech to start
 
         ####### more variables ######
         self.chatHandler = ChatHandler()
-        self.name = '' # api-key variable... so poorly named... I'm sorry.... :(
+        self.apiKey = '' # api-key variable
         self.userName = ''
         self.augMsg = '' # augmented message (augmentation + original message
         self.reply = '' # the response from chatbot
@@ -278,9 +285,9 @@ class GUI:
         self.Window.mainloop()    
  
     # CHAT window setup #######################
-    def layout(self, name, chatWinWidth = 470, chatWinHeight=550):
+    def layout(self, api_key, chatWinWidth = 470, chatWinHeight=550):
  
-        self.name = name
+        self.apiKey = api_key
         # to show chat window
         self.Window.deiconify()
         self.Window.title("CHATROOM")
@@ -428,12 +435,21 @@ class GUI:
     def micButton(self):
         # if user starts speaking
         if self.userStartedSpeaking == False:
+
+            self.useSpeakType = 'speak' # set system to use spoken input
+            self.nothingWasHeard = False # reset this
+            
             self.timeStartSpeaking = time.time()
             self.ferHistResults = [] # clear history to capture this session's emotions
             self.userStartedSpeaking = True
             self.clearInputBox()
             self.entryMsg.config(state=DISABLED)
             self.buttonMsg.config(state=DISABLED)
+            # stop the clock on any typing that may have been happening
+            if self.userStartedTyping == True:
+                self.userStartedTyping = False # user has sent a message and has not yet started typing again
+                self.timeStopTyping = time.time()
+                print("user aborted typing at: ", self.timeStopTyping)
             
             # start recording .wav file of user speaking
             self.startRecordingUser()
@@ -486,7 +502,7 @@ class GUI:
             y = DoSpeech(verbose = False) # free service for now... has limits.
             if fromFile == False:
                 try:
-                    audioDataOutput = y.recognizeSpeechFromMic(self.speakTrigger) # send a freq and duration of 500 and 250 to trigger speaking
+                    audioDataOutput = y.recognizeSpeechFromMic(self.speakTrigger, timeout = self.speechTimeout) # send a freq and duration of 500 and 250 to trigger speaking
                     self.wavFile = self.convertAudioDataToWavFile(audioDataOutput)
                 except Exception as e:
                     print("problem with analyze speech...")
@@ -520,10 +536,12 @@ class GUI:
             self.entryMsg.config(state=NORMAL)
             try:
                 self.entryMsg.insert(END, self.userSpeech[0][0] + "\n")
-            except:
-                pass # voice recognition didn't work
-            self.entryMsg.config(state=DISABLED) # keep message un-editable until send
-            self.entryMsg.see(END) # moves to the end of the message (e.g., for insertion)
+                self.entryMsg.config(state=DISABLED) # keep message un-editable until send
+                self.entryMsg.see(END) # moves to the end of the message (e.g., for insertion)
+            except Exception as e:
+                # nothing was saved into userSpeech because nothing was recognized
+                self.entryMsg.config(state=NORMAL) # keep message un-editable until send
+                self.entryMsg.see(END) # moves to the end of the message (e.g., for insertion)
 
             return(returnString)
         
@@ -535,12 +553,16 @@ class GUI:
         if self.entryMsg.cget('state') == 'disabled':
             return
         if event.keysym != "Shift_R" and event.keysym != "Shift_L":
+            self.useSpeakType = 'type'
             if self.userStartedTyping == False and self.entryMsg.cget('state') != 'disabled':
                 self.ferHistResults = [] # clear the emotion list to get emotions only for this session
                 self.userStartedTyping = True
                 self.timeStartTyping = time.time()
                 print("user started typing at: ", self.timeStartTyping)
-
+                self.timeStopTyping = time.time() # keep this up to the last key pressed
+            else:
+                self.timeStopTyping = time.time() # keep this up to the last key pressed
+                
     def closeApp(self, event):
         self.Window.destroy()
         #self.serverProcess.kill() 
@@ -549,15 +571,15 @@ class GUI:
         self.login.destroy()
         self.Window.destroy()
 
-    def beginChat(self, name, userName = ':'): #############################
+    def beginChat(self, apiKeyString, userName = ':'): #############################
         self.login.destroy()
-        self.layout(name) # api-key... poorly named variable :(
+        self.layout(apiKeyString) # api-key
         self.userName = userName
         try:
             self.chatHandler.initializeAPI(api_key = key)
         except:
-            self.chatHandler.initializeAPI(api_key = name)
-            self.setAPIkeyAsEnvVar(name)
+            self.chatHandler.initializeAPI(api_key = apiKeyString)
+            self.setAPIkeyAsEnvVar(apiKeyString)
         self.chat_started = True
  
     def getCurrentFER(self, delay = None):
@@ -589,17 +611,6 @@ class GUI:
                 pass
         self.Window.after(self.ferDelay, self.getCurrentFER)  # reschedule event in 2 seconds
  
-    def getQueryAugmentation(self, index = None):
-        if index != None:
-            self.EARindex = index
-        
-        if self.fer_result in self.aug_dict:
-            self.queryAug = self.aug_dict[self.fer_result][self.EARindex]
-        else:
-            self.queryAug = None
-
-        return self.queryAug
- 
     def getLLMResponse(self, query = None): # default is to use non-augmented message
         if query is None:
             query = self.msg
@@ -615,6 +626,28 @@ class GUI:
         self.reply = LLM_response
         return (self.reply)
 
+    def getQueryAugmentation(self, index = None):
+        if index != None: # index into augmentation dictionary
+            self.EARindex = index
+        
+        if self.fer_result in self.aug_dict:
+            self.queryAug = self.aug_dict[self.fer_result][self.EARindex]
+        else:
+            self.queryAug = None
+
+        return self.queryAug
+
+    def getMultQueryAugmentation(self, index = None):
+        if index != None: # index into augmentation dictionary
+            self.EARindex = index
+        # self.useMultEAR == True will use multiple emotions within a query
+
+        # determine how many emotions were reported during input
+        # divide self.msg into same number of pieces (assume uniform division)
+        # get augmentations for each and stitch together
+        # return complete multiple EAR response
+ 
+        
     def composeAugMsg(self):
         self.getQueryAugmentation()
         self.augMsg = self.queryAug + " " + self.msg
@@ -632,8 +665,11 @@ class GUI:
         self.entryMsg.config(state = NORMAL)
         
         self.userStartedTyping = False # user has sent a message and has not yet started typing again
-        self.timeStopTyping = time.time()
-        print("user sent message at: ", self.timeStopTyping)
+        #self.timeStopTyping = time.time()
+        if self.useSpeakType == 'type':
+            print("user stopped typing this message at: ", self.timeStopTyping)
+        else:
+            print("user stopped speaking this message at: ", self.timeStopSpeaking)
         print(self.ferHistResults)            
         print()
 
@@ -687,9 +723,13 @@ class GUI:
                 raise Exception("command not found")
         except:
             self.textCons.insert(END, self.commandPrefix+"  COMMAND NOT UNDERSTOOD  "+self.commandPrefix+"\n")
+            self.nothingWasHeard = True
             self.textCons.config(state=DISABLED)
             self.textCons.see(END)
             
+        # reset input mode to type (until mic is pressed again)
+        self.useSpeakType = 'type'
+        
 def main(useVideoStream = True):
     if useVideoStream == True:
         port = 400
