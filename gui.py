@@ -8,7 +8,7 @@ import openai
 from chatHandler import ChatHandler
 from DoSpeech import DoSpeech
 from PIL import Image, ImageTk
-
+from multiprocessing.pool import ThreadPool
 
 
 # run videostream_loop.py in a cmd window before you run this
@@ -448,36 +448,17 @@ class GUI:
             ################################################################################
             # temporarily only gets input from mic and does not record #####################
             self.userStartedSpeaking = True
-            self.analyzeSpeech(fromFile = False) # need to run this as a subprocess............................................
-            self.micButton() # speaking is over, run top sequence...
+            #self.analyzeSpeech()#fromFile = False) # need to run this as a subprocess............................................
+
+            # send voice analysis into a separate thread (cleans up after itself too)
+            pool=ThreadPool(processes=1)
+            print("sending analyzeSpeech")
+            async_result = pool.apply_async(self.analyzeSpeech)
+
+            # speech analysis should continue until ready to rejoin
+            # analyzeSpeech handles the refresh of the interface
             ################################################################################
             
-        else: # user stops speaking
-            self.timeStopSpeaking = time.time()
-            self.userStartedSpeaking = False
-            self.buttonMsg.config(state=NORMAL)
-            self.micButtonMsg.config(state=NORMAL)
-            
-            # stop recording .wav file of user speaking
-            self.stopRecordingUser()
-            
-            print("user stopped speaking at: ", self.timeStopSpeaking)
-            print(self.ferHistResults)
-            self.micButtonMsg["text"] = "push\nto\nspeak"
-            print()
-
-            # do speech analysis and output results to the chat box
-            # TEMPORARILY DISABLED UNTIL RECORDING IS A THING
-            #self.analyzeSpeech(fromFile = True)
-            #print(self.userSpeech)
-            
-            self.entryMsg.config(state=NORMAL)
-            try:
-                self.entryMsg.insert(END, self.userSpeech[0][0] + "\n")
-            except:
-                pass # voice recognition didn?t work
-            self.entryMsg.config(state=DISABLED)
-            self.entryMsg.see(END) # moves to the end of the message (e.g., for insertion)
             
     def startRecordingUser(self):
         pass
@@ -518,7 +499,34 @@ class GUI:
                 returnString = self.userSpeech[0][0]
             except: # didn't find any speech...
                 returnString = ""
+                
+            #############################################################
+            # user stops speaking - reset everything
+            self.timeStopSpeaking = time.time()
+            self.userStartedSpeaking = False
+            self.buttonMsg.config(state=NORMAL)
+            self.micButtonMsg.config(state=NORMAL)
+            self.micButtonMsg["text"] = "push\nto\nspeak"
+            self.micButtonMsg.update()
+            
+            # stop recording .wav file of user speaking
+            self.stopRecordingUser()
+            
+            print("user stopped speaking at: ", self.timeStopSpeaking)
+            print(self.ferHistResults)
+            print()
+
+            # put output into chat window input space for review
+            self.entryMsg.config(state=NORMAL)
+            try:
+                self.entryMsg.insert(END, self.userSpeech[0][0] + "\n")
+            except:
+                pass # voice recognition didn't work
+            self.entryMsg.config(state=DISABLED) # keep message un-editable until send
+            self.entryMsg.see(END) # moves to the end of the message (e.g., for insertion)
+
             return(returnString)
+        
         except Exception as e:
             print(e)
             print("\nproblem with analyzeSpeech()....\n")
