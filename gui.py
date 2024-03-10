@@ -13,7 +13,7 @@ from multiprocessing.pool import ThreadPool
 
 # run videostream_loop.py in a cmd window before you run this
 # or have autoSpawnServer try to run it for you
-useServer = False     # set to false to run GUI only
+useServer = True     # set to false to run GUI only
 
 autoSpawnServer = True # set false to run the server yourself
 
