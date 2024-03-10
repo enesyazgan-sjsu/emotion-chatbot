@@ -13,7 +13,7 @@ from multiprocessing.pool import ThreadPool
 
 # run videostream_loop.py in a cmd window before you run this
 # or have autoSpawnServer try to run it for you
-useServer = True     # set to false to run GUI only
+useServer = False     # set to false to run GUI only
 
 autoSpawnServer = True # set false to run the server yourself
 
@@ -663,7 +663,7 @@ class GUI:
         # split input message into pieces of fraction size
         listOfWordsInMsg = self.msg.split(' ') # default to space separations
         if len(ferList) == 0.0:
-            ferList.append(['None', str(self.endTime)]) # filler in the case of no fer
+            ferList.append(['None', str(endTime)]) # filler in the case of no fer
         wordsPerEmotion = int(len(listOfWordsInMsg) / len(ferList))
 
         wordIndex = 0
