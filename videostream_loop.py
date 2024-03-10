@@ -4,6 +4,7 @@ import os
 import sys
 import argparse
 from PIL import Image
+import time
 
 #pytorch libraries
 import torch
@@ -121,6 +122,7 @@ class FERServer(asynchat.async_chat):
                     message = str("None")+self.get_terminator()
                     
                 #send FER Result to Client
+                message = message + str(time.time()) + "%" # add time and separator
                 print("sending: " + message) #delete soon
                 self.push(message.encode("utf-8"))
                     

@@ -59,12 +59,16 @@ if autoSpawnServer == True:
             # run videostream_loop.py
             import subprocess
             import sys
+
             serverProcess = subprocess.Popen(pathToVideoStreamLoop, stdout=subprocess.PIPE, shell=True) 
+            # I want to resize the window!!! But this doesn't work... :(
+            #serverProcess = subprocess.Popen('cmd','/c', 'mode con cols=100 lines=40')
             #subprocess.Popen(pathToVideoStreamLoop, shell=True) 
             print("waiting for server to start...")
             time.sleep(10)
             print("done waiting...")
-    except:
+    except Exception as e:
+        print(e)
         print("problem starting server... aborting server.")
         useServer = False
 
@@ -106,9 +110,11 @@ class GUI:
             self.usingServer = True
             self.serverProcess = serverProcess
         self.client = client
-        self.terminator = "#"
+        self.terminator = "#" # between time stamp and next emotion
+        self.termTime = "%" # between emotion and time stamp
         self.chat_started = False
-        self.fer_result = "None"
+        self.ferHistResults = [] # history or results [[str(emotion), str(timeStamp)],...]
+        self.fer_result = "None" # str(emotion)
         self.fer_image = './startImage.jpg' # image to display for a given fer_result
         self.userStartedTyping = False
         self.timeStartTyping = 0.0
@@ -295,7 +301,8 @@ class GUI:
         geoString = str(chatWinWidth)+"x"+str(chatWinHeight)+ \
                         "+"+str(winXpos)+"+"+str(winYpos)
         self.Window.geometry(geoString)
-        
+        #self.Window.state("zoomed")
+
         # server information label ###
         if self.client != None:
             self.labelHead = Label(self.Window,
@@ -422,6 +429,7 @@ class GUI:
         # if user starts speaking
         if self.userStartedSpeaking == False:
             self.timeStartSpeaking = time.time()
+            self.ferHistResults = [] # clear history to capture this session's emotions
             self.userStartedSpeaking = True
             self.clearInputBox()
             self.entryMsg.config(state=DISABLED)
@@ -431,24 +439,30 @@ class GUI:
             self.startRecordingUser()
             
             print("user started speaking at: ", self.timeStartSpeaking)
-            self.micButtonMsg["text"]="push\nto\nstop"
-
+            self.micButtonMsg["text"]="wait\nfor\nbeep"
+            self.micButtonMsg.config(state=DISABLED)
+            self.micButtonMsg.update()
+            
+            #time.sleep(.5) # *may* need this to allow the interface to update
+            
             ################################################################################
             # temporarily only gets input from mic and does not record #####################
-            self.analyzeSpeech(fromFile = False)
             self.userStartedSpeaking = True
-            self.micButton()
+            self.analyzeSpeech(fromFile = False) # need to run this as a subprocess............................................
+            self.micButton() # speaking is over, run top sequence...
             ################################################################################
             
         else: # user stops speaking
             self.timeStopSpeaking = time.time()
             self.userStartedSpeaking = False
             self.buttonMsg.config(state=NORMAL)
+            self.micButtonMsg.config(state=NORMAL)
             
             # stop recording .wav file of user speaking
             self.stopRecordingUser()
             
             print("user stopped speaking at: ", self.timeStopSpeaking)
+            print(self.ferHistResults)
             self.micButtonMsg["text"] = "push\nto\nspeak"
             print()
 
@@ -500,8 +514,13 @@ class GUI:
                 y.recognizeSpeechFromFile(self.wavFile, self.timeSlices)#,timeSlices=[[1.6, 3.987664],[None,None]])
             self.userSpeechDict = y.outputDict
             self.userSpeech = y.output
-            return(self.userSpeech[0][0])
-        except:
+            try:
+                returnString = self.userSpeech[0][0]
+            except: # didn't find any speech...
+                returnString = ""
+            return(returnString)
+        except Exception as e:
+            print(e)
             print("\nproblem with analyzeSpeech()....\n")
             
     def keyPressedEvent(self, event):
@@ -509,6 +528,7 @@ class GUI:
             return
         if event.keysym != "Shift_R" and event.keysym != "Shift_L":
             if self.userStartedTyping == False and self.entryMsg.cget('state') != 'disabled':
+                self.ferHistResults = [] # clear the emotion list to get emotions only for this session
                 self.userStartedTyping = True
                 self.timeStartTyping = time.time()
                 print("user started typing at: ", self.timeStartTyping)
@@ -533,17 +553,24 @@ class GUI:
         self.chat_started = True
  
     def getCurrentFER(self, delay = None):
+        # gets list of emotions and time stamps
         if delay != None:
             self.ferDelay = delay
         if self.chat_started:
             try:
                 raw_message = str(self.client.recv(1024).decode('utf-8'))
-                fer_list = [result for result in raw_message.split(self.terminator) if result != '']
-                self.fer_result = fer_list[-1]
+                #print(raw_message) # "happy#17286487.8278%" # self.termTime is event delimiter
+                # should get [happy#183764786.632%sad#827635987.872635...]
+                fer_list = [result for result in raw_message.split(self.termTime) if result != '']
+                ferTime = fer_list[-1].split(self.terminator) # ['Angry', '1710025315.6787279']
+                self.ferHistResults.append(ferTime) # historical emotions with time stamps
+                self.fer_result = ferTime[0] # 'Angry'
                 self.labelHead.config(text="Detected Emotion: " + str(self.fer_result))
-            except:
+            except Exception as e:
+                print(e)
                 print("no message from server")
                 self.labelHead.config(text="No Server Detected: " + str(self.fer_result))
+            # set emotion image on screen label
             try:
                 #print("using...", self.fer_result)
                 #print("using...", self.imageDict[self.fer_result])
@@ -598,7 +625,8 @@ class GUI:
         
         self.userStartedTyping = False # user has sent a message and has not yet started typing again
         self.timeStopTyping = time.time()
-        print("user stopped typing at: ", self.timeStopTyping)
+        print("user sent message at: ", self.timeStopTyping)
+        print(self.ferHistResults)            
         print()
 
         if self.commandPrefix not in self.msg:
