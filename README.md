@@ -1,5 +1,5 @@
 # emotion-chatbot
-SJSU 2024 Grad Project - Emotion Chatbot
+SJSU 2024 Grad Project - Emotion Chatbot 
 
 # You will need your own OPENAI_API_KEY
 Become a member and get a key. Instructions at top of gui.py
@@ -26,18 +26,18 @@ pip install torch==1.8.0+cpu torchvision==0.9.0+cpu torchaudio==0.8.0 -f https:/
 ************************
 **RUNNING INSTRUCTIONS**
 ************************
-Download DDAMFN Repository: https://github.com/simon20010923/DDAMFN
-(copy of necessary folders provided in installHelp folder)
+clone this and run:
+pip install -r requirements.txt
+to get all dependancies on your system
 
-Paste ./networks/ and ./pretrained/ into the main code folder (same folder as main.py)
-
-run installDependancies.py -- this should install any necessary modules on your system.
-
+then...
 ### TO RUN THE GUI ALONE ####
 set useServer to False at top of gui.py
 
 ### TO RUN THE GUI AND WEBCAM SERVER #####
+Run gui.py - it will attempt to launch the VideoStream.py for you.
 
+If this fails somehow, in gui.py, set useAutoSpawn = False and 
 Run VideoStream.py in one terminal. Then, run Gui.py in another terminal.
 
 VideoStream.py creates a server and runs FER on a continuous webcam stream, sending the result of the FER for each captured frame to its client application, gui.py
@@ -46,11 +46,13 @@ VideoStream.py creates a server and runs FER on a continuous webcam stream, send
 Uncomment the code at the top of DoSpeech.py for initial run, it will 
 install dependancies on your system for you. (then you can re-comment it out 
 because it takes a long time)
+
 #######################################
 ## FUNCTIONS
 #######################################
 
 3/1/24:
+
 **SYSTEM COMMANDS**
 Using a command prefix, you can change and print variables during the chat to test different situations without restarting the system. For example:
 
@@ -68,3 +70,10 @@ self.commandList is a list of supported variables (we could change it to just ex
 entering an api-key in the first window will use that - otherwise it will look for an environment variable to use
 
 shift-enter will send the text to chatGPT (as will the send button)
+
+3/10/24:
+
+**multiple EAR**
+self.useMultEAR = True (current default) will cause the system to add emotional augmentation at multiple points within a single chat input. False will only use one emotional augmentation.
+
+
