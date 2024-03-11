@@ -8,7 +8,7 @@ installList = ['opencv-python', 'pillow', 'torch', 'torchvision',
 	      'socket', 'openai']
 
 # from DDAM github
-installList.append('networks.DDAM')
+#installList.append('networks.DDAM')
 
 for each in installList:
 	install(each)
