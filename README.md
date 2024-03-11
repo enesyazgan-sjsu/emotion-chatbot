@@ -8,29 +8,17 @@ Best practices as per OpenAI is to set an environment variable:
 
 https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
 
-
-
-#DDAMFN REQUIREMENTS:
-Install python 3.8.9: https://www.python.org/downloads/release/python-389/ 
-Install pytorch:
-
-# CUDA 11.1
-pip install torch==1.8.0+cu111 torchvision==0.9.0+cu111 torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html
-
-# CUDA 10.2
-pip install torch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0
-
-# CPU only
-pip install torch==1.8.0+cpu torchvision==0.9.0+cpu torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html
-
 ************************
 **RUNNING INSTRUCTIONS**
 ************************
 clone this and run:
+
 pip install -r requirements.txt
+
 to get all dependancies on your system
 
 then...
+
 ### TO RUN THE GUI ALONE ####
 set useServer to False at top of gui.py
 
@@ -46,6 +34,19 @@ VideoStream.py creates a server and runs FER on a continuous webcam stream, send
 Uncomment the code at the top of DoSpeech.py for initial run, it will 
 install dependancies on your system for you. (then you can re-comment it out 
 because it takes a long time)
+
+# DDAMFN REQUIREMENTS:
+Install python 3.8.9: https://www.python.org/downloads/release/python-389/ 
+Install pytorch:
+
+# CUDA 11.1
+pip install torch==1.8.0+cu111 torchvision==0.9.0+cu111 torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html
+
+# CUDA 10.2
+pip install torch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0
+
+# CPU only
+pip install torch==1.8.0+cpu torchvision==0.9.0+cpu torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html
 
 #######################################
 ## FUNCTIONS
