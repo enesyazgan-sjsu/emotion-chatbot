@@ -65,10 +65,13 @@ will cause the client to stop showing the user the emotional augmentation (altho
 
 will output the status of the self.useAugmentation variable
 
-self.commandList is a list of supported variables (we could change it to just expose all variables easily).
+%%% help
+
+will output self.commandList which is a list of supported variables, but currently any variable will work if you know what it is...
 
 **GUI NAVIGATION**
-entering an api-key in the first window will use that - otherwise it will look for an environment variable to use
+
+The system will look for an api-key on your system, failing that, it will warn you and you can enter an api-key in the first window (login). It will attempt to set that key on your system so you can skip it the next time.
 
 shift-enter will send the text to chatGPT (as will the send button)
 
