@@ -4,3 +4,10 @@ matplotlib
 facenet-pytorch
 tk
 openai
+torch
+torchvision
+asyncore
+asynchat
+socket
+
+
