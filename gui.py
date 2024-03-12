@@ -120,7 +120,7 @@ class GUI:
         # setup time slices and multiple emotions in EAR
         self.useSpeakType = 'type' # 'speak' or 'type' to choose which input to use
 
-        self.useMultEAR = True # use multiple emotions in EAR 
+        self.useMultEAR = False # use multiple emotions in EAR 
         
         self.userStartedTyping = False
         self.timeStartTyping = 0.0
@@ -152,15 +152,21 @@ class GUI:
         self.showAugmentation = True # output the emotional augmentation being used
         self.useAugmentation = True # set to False to not use emotional augmentation
         self.ferDelay = 7500
-        self.EARindex = 1 # which in the list of augmentations to use
-        self.aug_dict = {'None':["",""],
-            'Neutral':["(Reply as if I have a neutral facial expression)","(I am neutral now.)"],
-            'Happy':["(Reply as if I am really happy)","(I am happy now.)"], 
-            'Sad':["(Reply as if I am really sad)","(I am sad now.)"],
-            'Surprise':["(Reply as if I am really surprised)","(I am surprised now.)"],
-            'Fear':["(Reply as if I am really scared)","(I am scared now.)"],
-            'Disgust':["(Reply as if I am really disgusted)","(I am disgusted now.)"],
-            'Angry':["(Reply as if I am really angry)","(I am angry now.)"]}
+
+        self.emotionList = ['Neutral', 'Happy', 'Sad', 'Surprise', 'Fear', 'Disgust', 'Angry']
+        self.aug_dict = {}
+        # fill emotion dictionary with templates........
+        for each in self.emotionList:
+            self.aug_dict[each] = []
+            self.aug_dict[each].append(f"(Reply as if I have a {each} facial expression.)")
+            self.aug_dict[each].append(f"(I am {each} now.)")
+            self.aug_dict[each].append(f"(Reply as if you see that I have a {each} facial expression.)")
+        # account for None emotion as well
+        self.aug_dict['None'] = []
+        for each in range(len(self.aug_dict[self.emotionList[0]])):
+            self.aug_dict['None'].append("")
+        # index to use for default template
+        self.EARindex = 2 # which in the list of augmentations to use
 
         self.imageFolder = "./emotionImages/"
         self.startImage = self.imageFolder + 'startImage.png' # image to display for a given fer_result
@@ -309,7 +315,7 @@ class GUI:
         geoString = str(chatWinWidth)+"x"+str(chatWinHeight)+ \
                         "+"+str(winXpos)+"+"+str(winYpos)
         self.Window.geometry(geoString)
-        #self.Window.state("zoomed")
+        self.Window.state("zoomed")
 
         # server information label ###
         if self.client != None:
@@ -630,12 +636,16 @@ class GUI:
     def getQueryAugmentation(self, index = None):
         if index != None: # index into augmentation dictionary
             self.EARindex = index
-        
-        if self.fer_result in self.aug_dict:
-            self.queryAug = self.aug_dict[self.fer_result][self.EARindex]
-        else:
-            self.queryAug = None
 
+        try:
+            if self.fer_result in self.aug_dict:
+                self.queryAug = self.aug_dict[self.fer_result][self.EARindex]
+            else:
+                self.queryAug = None
+        except Exception as e:
+            print(e)
+            pass
+        
         return self.queryAug
 
     def composeMultQueryAugMsg(self, index = None):
