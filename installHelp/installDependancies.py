@@ -7,8 +7,8 @@ installList = ['opencv-python', 'pillow', 'torch', 'torchvision',
 	       'facenet_pytorch', 'networks', 'asyncore', 'asynchat',
 	      'socket', 'openai']
 
-# from DDAM github
-#installList.append('networks.DDAM')
+installList.extend(['SpeechRecognition','libasound2-dev', 'portaudio19-dev',
+                'libportaudio2', 'libportaudiocpp0', 'ffmpeg', 'pyaudio'])
 
 for each in installList:
 	install(each)
