@@ -31,7 +31,6 @@ class GUI_EVAL:
         # center it
         screenWidth = self.Window.winfo_screenwidth()
         screenHeight = self.Window.winfo_screenheight()
-        print(screenWidth, screenHeight)
         winXpos = int((screenWidth-chatWinWidth)/2)
         winYpos = int(((screenHeight-chatWinHeight)/2)-50)#subtract a little for quick start bar
         if winYpos < 0:
@@ -82,7 +81,7 @@ class GUI_EVAL:
             x = Radiobutton(self.Window, text=str(each+1),\
                             variable=self.appropriatenessVar,\
                         value=str(each+1),tristatevalue=0,\
-                            command=self.recordSympathyValue)
+                            command=self.recordAppropriatenessValue)
             x.place(relwidth=1/(ratingScale)-.02,relheight=0.1,\
                     relx=.01+(each*(1/ratingScale)),\
                     rely=self.appStartHeight+.11)
@@ -98,7 +97,7 @@ class GUI_EVAL:
             x = Radiobutton(self.Window, text=str(each+1),\
                             variable=self.understandVar,\
                         value=str(each+1),tristatevalue=0,\
-                            command=self.recordSympathyValue)
+                            command=self.recordUnderstandValue)
             x.place(relwidth=1/(ratingScale)-.02,relheight=0.1,\
                     relx=.01+(each*(1/ratingScale)),\
                     rely=self.undStartHeight+.11)
@@ -110,9 +109,9 @@ class GUI_EVAL:
 
     def recordSympathyValue(self):
         print(self.sympathyVar.get())
-    def recordappropriatenessValue(self):
+    def recordAppropriatenessValue(self):
         print(self.appropriatenessVar.get())
-    def recordunderstandValue(self):
+    def recordUnderstandValue(self):
         print(self.understandVar.get())
 '''        # send the login window to the front
  
