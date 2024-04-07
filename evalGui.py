@@ -33,7 +33,7 @@ class DATA:
         #                      'augResponse'  : ""} }
         self.delimElement = '||'
         self.delimKeyVal = '|+|'
-        if path == None:
+        if path != None:
             self.readData(path)
     def addData(self, ts, vp, oq, aq, orr, ar):
         self.dataDict[ts] = {'vidPath' : vp, 'origQuery' : oq,\
@@ -69,7 +69,8 @@ class DATA:
                     else:
                         tempDict[kv[0]]=kv[1]
                 self.dataDict[ts]=tempDict
-    
+    def getNext(self):
+        return
 '''
 x = DATA()
 x.addData('45','./','hello','hello(happy)','yes?','you seem happy!')
@@ -86,8 +87,9 @@ x.printData()
 
 # GUI_EVAL class for evaluation
 class GUI_EVAL:
-    def __init__(self, chatWinWidth = 400, chatWinHeight = None, minHeight = 10, ratingScale = 10):
-        self.data = DATA('./tempDataSave')
+    def __init__(self, chatWinWidth = 400, chatWinHeight = None, minHeight = 10, ratingScale = 10, dataPath = './tempDataSave'):
+        self.data = DATA(dataPath)
+        self.dataKeyIter = iter(self.data.dataDict.keys()) # time stamps iterator
         
         if chatWinHeight == None:
             chatWinHeight = chatWinWidth * .75
@@ -105,7 +107,9 @@ class GUI_EVAL:
         self.ratingButtonWidth= 0.05
         self.symStartHeight = 0.74
         self.buffer = 0.01
-        self.currentVidPath = PATH_TO_DATA
+        # find first timestamp and video path
+        self.currentDataTS = next(self.dataKeyIter, None)
+        self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']
         
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
@@ -150,7 +154,7 @@ class GUI_EVAL:
         self.playerLabel.place(relwidth=0.56, relheight=self.playerButtonSizeY, \
                               relx=0.22, rely=self.playerLabelHeight)
 
-        self.pathToVideo = PATH_TO_DATA
+        #self.pathToVideo = PATH_TO_DATA
         # this is from https://pypi.org/project/tkVideoUtils/
         #self.audioPath = "./"
         #self.player = VideoPlayer(self.Window, self.pathToVideo, self.audioPath, self.playerLabel,\
@@ -241,6 +245,10 @@ class GUI_EVAL:
 
     def makeVideoWindow(self, pathToVideo = None, chatWinWidth = 600, chatWinHeight = 300, minHeight = 10, ratingScale = 10):
         if pathToVideo == None:
+            if self.currentVidPath == None:
+                # reached end of available data in DATA
+                print("out of data... aborting video play...")
+                return
             pathToVideo = self.currentVidPath
         self.videoWindow = Toplevel()
         self.videoWindow.configure(width=chatWinWidth, height=chatWinHeight, bg=self.bgColor)
@@ -282,7 +290,16 @@ class GUI_EVAL:
         self.player.play()
     def rePlayVideo(self):
         self.nextVideo(newVideo = self.currentVidPath)
-    def nextVideo(self, newVideo = './sample.mp4'):
+    def nextVideo(self, newVideo = None):
+        if newVideo == None:
+            # find next timestamp and video path
+            self.currentDataTS = next(self.dataKeyIter, None)
+            if self.currentDataTS == None:
+                print("reached the end of the data... aborting video playback...")
+                self.videoWindow.destroy() 
+            self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']
+            newVideo = self.currentVidPath
+            
         self.videoWindow.destroy()
         self.currentVidPath = newVideo
         self.makeVideoWindow(pathToVideo = newVideo)
