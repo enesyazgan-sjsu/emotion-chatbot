@@ -47,7 +47,7 @@ class DATA:
             print(self.dataDict[ts])
     def removeData(self, ts):
         del self.dataDict[ts]
-    def saveData(self, savePath = './tempDataSave'):
+    def saveData(self, savePath = './tempDataSave.txt'):
         with open(savePath, "w") as f:
             for timestamp in self.dataDict.keys():
                 stringToWrite = "timestampStart" + self.delimKeyVal + timestamp
@@ -57,7 +57,7 @@ class DATA:
                     stringToWrite = stringToWrite + self.delimKeyVal + temp
                 stringToWrite = stringToWrite+'\n'
                 f.write(stringToWrite)
-    def readData(self, readPath = './tempDataSave'):
+    def readData(self, readPath = './tempDataSave.txt'):
         self.dataDict = {}
         with open(readPath, 'r') as f:
             for line in f:
@@ -87,7 +87,7 @@ x.printData()
 
 # GUI_EVAL class for evaluation
 class GUI_EVAL:
-    def __init__(self, chatWinWidth = 400, chatWinHeight = None, minHeight = 10, ratingScale = 10, dataPath = './tempDataSave'):
+    def __init__(self, chatWinWidth = 400, chatWinHeight = None, minHeight = 10, ratingScale = 10, dataPath = './tempDataSave.txt'):
         self.data = DATA(dataPath)
         self.dataKeyIter = iter(self.data.dataDict.keys()) # time stamps iterator
         

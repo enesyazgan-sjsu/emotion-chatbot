@@ -183,6 +183,7 @@ class GUI:
         # dictionary of available commanable variables and their values
         self.commandList = ['self.showAugmentation','self.useAugmentation', 'self.ferDelay']
         self.restrictAccessToCommandList = False
+        self.currentDataPath = './tempDataSave.txt'
         
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
@@ -433,8 +434,16 @@ class GUI:
                         relx=0.974)
         scrollbar.config(command=self.textCons.yview)
 
- 
-
+        # make a recording checkbox
+        self.recordVar = IntVar()
+        self.recordCheckbutton = Checkbutton(self.labelBottom, \
+                    text = 'record/add data to: '+self.currentDataPath,\
+                    variable=self.recordVar, onvalue=1, offval=0)
+        self.recordCheckbutton.place(relx=0.01,
+                             rely=0.076,
+                             relheight=0.02,
+                             relwidth=0.98)
+        
     ############################################################################
     ##          End of layout 
     ##          Begin functionality
@@ -719,7 +728,8 @@ class GUI:
         print()
 
         if self.commandPrefix not in self.msg:
-            # get emotion, augmentation, compose with msg, and get response
+            # get emotion, augmentation, compose with msg,
+            # get response, and record data if enabled
             self.composeAugMsg()
             self.clearInputBox()
             if self.useAugmentation:
@@ -741,6 +751,12 @@ class GUI:
 
             self.textCons.config(state=DISABLED)
             self.textCons.see(END)
+
+            # record data if enabled #######################
+            if self.recordVar.get() == 1:
+                self.recordData()
+                
+            
 
         else: # user is changing some variables with the commandPrefix     
             self.entryMsg.delete('1.0', 'end') # clean up
@@ -774,7 +790,43 @@ class GUI:
             
         # reset input mode to type (until mic is pressed again)
         self.useSpeakType = 'type'
+
+    def recordData(self):
+        print("recording data and appending it to: ", self.currentDataPath)
+        # timestampStart|+|45||vidPath|+|./test.mp4||origQuery|+|hello||augQuery|+|hello(happy)||origResponse|+|yes?||augResponse|+|you seem happy!\n
+        kvDelim = '|+|'
+        elDelim = '||'
+        timeStartSpeaking = str(int(float(self.timeStartSpeaking)))
+        timeStopSpeaking = str(int(float(self.timeStopSpeaking)))
+        timeStartTyping = str(int(float(self.timeStartTyping)))
+        timeStopTyping = str(int(float(self.timeStopTyping)))
+        if self.useSpeakType == 'type':
+            # int portion of start-stop time stamp
+            ts = timeStartTyping+'-'+timeStopTyping
+        else:
+            ts = timeStartSpeaking+'-'+timeStopTyping
+            
+        vp = './NEEDS_TO_BE_DONE' # path to video
+        oq = self.msg.replace('\n','\\n') # original query
+        aq = self.augMsg.replace('\n','\\n') # augmented query
+        orr = 'NEEDS_TO_BE_DONE' # original response
+        ar = self.reply.replace('\n','\\n') # augmented response
         
+        dataString = 'timestampStart' + kvDelim + ts +\
+                     elDelim + 'vidPath' + kvDelim + vp +\
+                     elDelim + 'origQuery' + kvDelim + oq +\
+                     elDelim + 'augQuery' + kvDelim + aq +\
+                     elDelim + 'origResponse' + kvDelim + orr +\
+                     elDelim + 'augResponse' + kvDelim + ar + '\n'
+                     
+        # if file exists, append data to it
+        if not os.path.isfile(self.currentDataPath):
+            with open(self.currentDataPath,'w') as f:
+                f.write(dataString)
+        else:
+            with open(self.currentDataPath, 'a') as f:
+                f.write(dataString)
+
 def main(useVideoStream = True):
     if useVideoStream == True:
         port = 400
