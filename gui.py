@@ -444,7 +444,9 @@ class GUI:
                              rely=0.076,
                              relheight=0.02,
                              relwidth=0.98)
-        
+
+        self.deleteAllSingleFrameImagesInFramesFolder()
+
     ############################################################################
     ##          End of layout 
     ##          Begin functionality
@@ -793,18 +795,54 @@ class GUI:
         # reset input mode to type (until mic is pressed again)
         self.useSpeakType = 'type'
 
-    def makeVideoFromFrames(self, nameOfVideo='video'):
+    def deleteAllSingleFrameImagesInFramesFolder(self):
+        # check to make sure there are no single frames
+        # in the data folder (this would interfere with collecting
+        # new data
+        flagUser = False
+        print('checking data folder for stray images...')
+        for each in os.listdir(self.framesFolder):
+            if each.endswith(".png"):
+                flagUser = True
+                break
+        if flagUser == True:
+            from tkinter import messagebox
+            #w=Tk()
+            #w.wm_withdraw()
+            eraseMessages = messagebox.showinfo(message="images found in: "+self.framesFolder+\
+                'continuing will erase them...', title="WARNING")
+            if eraseMessages == 'ok':
+                print("deleting single frame images of .png type from: ",self.framesFolder)
+                for each in os.listdir(self.framesFolder):
+                    if each.endswith(".png"):
+                        os.remove(self.framesFolder+'/'+each)
+            
+    def makeVideoFromFrames(self, nameOfVideo='video', start = None, stop = None):
         import cv2
         import os
-
+        # start and stop are integer timestamps of the images taken
+        # when the query began and ended 
         try:
             image_folder = self.framesFolder
             video_name = image_folder + '/' + nameOfVideo + '.avi'
 
-            images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
+            images = []#img for img in os.listdir(image_folder) if img.endswith(".png")]
+            for each in os.listdir(image_folder):
+                if each.endswith(".png"):
+                    try:
+                        timestamp = int(each.split('.')[0])
+                        if timestamp >= start and timestamp <= stop:
+                            images.append(each)
+                    except Exception as e:
+                        print(e)
+                        print("Problem with finding images for recording...")
+            print(images[:3])
+            print(images[-3:])
+
             frame = cv2.imread(os.path.join(image_folder, images[0]))
             height, width, layers = frame.shape
-
+            #width = 600 # can't seem to change this with current technique
+            #height = 300
             video = cv2.VideoWriter(video_name, 0, 1, (width,height))
 
             for image in images:
@@ -845,11 +883,17 @@ class GUI:
         if self.useSpeakType == 'type':
             # int portion of start-stop time stamp
             ts = timeStartTyping+'-'+timeStopTyping
+            startVid = int(timeStartTyping)
+            stopVid = int(timeStopTyping)
         else:
             ts = timeStartSpeaking+'-'+timeStopSpeaking
+            startVid = int(timeStartSpeaking)
+            stopVid = int(timeStopSpeaking)
 
         print("...making video: ", ts)
-        pathToVideo = self.makeVideoFromFrames(nameOfVideo = ts)
+        # send ts for name of video and start/stop int times for video
+        pathToVideo = self.makeVideoFromFrames(nameOfVideo = ts,\
+                    start= startVid, stop = stopVid)
 
         vp = pathToVideo # path to video
         oq = self.msg.replace('\n','\\n') # original query

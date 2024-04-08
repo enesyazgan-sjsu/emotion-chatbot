@@ -132,6 +132,7 @@ class GUI_EVAL:
                               relx=0.01, rely=self.responseLabelHeight)
 
         # radio buttons for sympathy
+        self.symButList = []
         self.sympathyVar = StringVar()
         self.sympathyLabel = Label(self.Window, text="sympathyLabel",\
                                    justify=CENTER)
@@ -145,9 +146,11 @@ class GUI_EVAL:
             x.place(relwidth=self.ratingButtonWidth,relheight=self.smallButtonHeight,\
                     relx=.01+(each*(1/ratingScale)),\
                     rely=self.symStartHeight+self.smallButtonHeight+.01)
+            self.symButList.append(x)
             
         self.appStartHeight = self.symStartHeight + (self.smallButtonHeight*2) + (self.buffer*2)
         # radio buttons for appropriateness
+        self.appButList = []
         self.appropriatenessVar = StringVar()
         self.appropriatenessLabel = Label(self.Window, text="appropriatenessLabel",\
                                    justify=CENTER)
@@ -161,9 +164,11 @@ class GUI_EVAL:
             x.place(relwidth=self.ratingButtonWidth,relheight=self.smallButtonHeight,\
                     relx=.01+(each*(1/ratingScale)),\
                     rely=self.appStartHeight+self.smallButtonHeight+.01)
-
+            self.appButList.append(x)
+            
         self.undStartHeight = self.appStartHeight +  (self.smallButtonHeight*2) + (self.buffer*2)
         # radio buttons for understanding evident
+        self.undButList = []
         self.understandVar = StringVar()
         self.appropriatenessLabel = Label(self.Window, text="understandingLabel",\
                                    justify=CENTER)
@@ -177,7 +182,7 @@ class GUI_EVAL:
             x.place(relwidth=self.ratingButtonWidth,relheight=self.smallButtonHeight,\
                     relx=.01+(each*(1/ratingScale)),\
                     rely=self.undStartHeight+self.smallButtonHeight+.01)
-
+            self.undButList.append(x)
 
         self.Window.bind("<Escape>",self.closeEvalGui)
         self.Window.mainloop()
@@ -212,6 +217,12 @@ class GUI_EVAL:
         if winXpos < 0:
             winXpos = 0
 
+        # for use later
+        self.chatWinWidth=chatWinWidth
+        self.chatWinHeight=chatWinHeight
+        self.winXpos=winXpos
+        self.winYpos=winYpos
+        
         geoString = str(chatWinWidth)+"x"+str(chatWinHeight)+ \
                         "+"+str(winXpos)+"+"+str(winYpos)
         self.videoWindow.geometry(geoString)
@@ -241,21 +252,52 @@ class GUI_EVAL:
     def rePlayVideo(self):
         self.nextVideo(newVideo = self.currentVidPath)
     def nextVideo(self, newVideo = None):
-        if newVideo == None:
-            # find next timestamp and video path
-            self.currentDataTS = next(self.dataKeyIter, None)
-            if self.currentDataTS == None:
-                print("reached the end of the data... aborting video playback...")
-                self.videoWindow.destroy()
-                self.makeVideoWindow(pathToVideo = 'Video Player')
-            self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']
-            newVideo = self.currentVidPath
-            print("loading: ",newVideo)
-        self.videoWindow.destroy()
-        self.currentVidPath = newVideo
-        self.makeVideoWindow(pathToVideo = newVideo)
-        self.playVideo()
-        
+        try:
+            if int(self.appropriatenessVar.get()) > 0 and int(self.sympathyVar.get()) > 0 and \
+                               int(self.understandVar.get()) > 0:
+                print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
+                if newVideo == None:
+                    # find next timestamp and video path
+                    self.currentDataTS = next(self.dataKeyIter, None)
+                    if self.currentDataTS == None:
+                        print("reached the end of the data... aborting video playback...")
+                        self.videoWindow.destroy()
+                        self.makeVideoWindow(pathToVideo = 'Video Player')
+                        # update buttons
+                        self.changeQuery('example query')
+                        self.changeResponse('example response')
+                    else:
+                        # set new video playing
+                        self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']
+                        newVideo = self.currentVidPath
+                        print("loading: ",newVideo)
+                        # update buttons
+                        self.changeQuery(self.data.dataDict[self.currentDataTS]['origQuery'])
+                        self.changeResponse(self.data.dataDict[self.currentDataTS]['augResponse'])
+                            
+                        self.videoWindow.destroy()
+                        self.currentVidPath = newVideo
+                        self.makeVideoWindow(pathToVideo = newVideo)
+                        self.playVideo()
+                    for each in self.symButList:
+                        each.deselect()
+                    for each in self.appButList:
+                        each.deselect()
+                    for each in self.undButList:
+                        each.deselect()
+                    print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
+        except:
+            from tkinter import messagebox
+            geoString = str(self.chatWinWidth)+"x"+str(self.chatWinHeight-200)+ \
+                            "+"+str(self.winXpos)+"+"+str(self.winYpos)
+            self.videoWindow.geometry(geoString)
+
+            eraseMessages = messagebox.showinfo(message="you must rate the video for all aspects \nbefore moving on to the next video", title="WARNING")
+
+            geoString = str(self.chatWinWidth)+"x"+str(self.chatWinHeight)+ \
+                            "+"+str(self.winXpos)+"+"+str(self.winYpos)
+            self.videoWindow.geometry(geoString)
+
     def changeQuery(self, newText = "changed"):
         self.queryLabel["text"]=newText
         self.queryLabel.update()
@@ -263,11 +305,11 @@ class GUI_EVAL:
         self.responseLabel["text"]=newText
         self.responseLabel.update()
     def recordSympathyValue(self):
-        self.changeQuery()
+        pass
     def recordAppropriatenessValue(self):
-        print(self.appropriatenessVar.get())
+        pass
     def recordUnderstandValue(self):
-        self.changeResponse()
+        pass
 
 def main():
     evalWin = GUI_EVAL()

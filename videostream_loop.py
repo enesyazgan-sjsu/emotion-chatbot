@@ -76,6 +76,8 @@ class FERServer(asynchat.async_chat):
     
     def run_fer_loop(self, frame_cap = None, width=112, height=112, cam_port=0):
         class_names = ['Neutral', 'Happy', 'Sad', 'Surprise', 'Fear', 'Disgust', 'Angry'] 
+        saveImagesPath = "./dataFolder/"
+        framePrefix = "frame_" # name of images saved until made into video
         
         print("Loading camera. This takes a few seconds..")
         cam = cv2.VideoCapture(cam_port, cv2.CAP_DSHOW)
@@ -91,7 +93,16 @@ class FERServer(asynchat.async_chat):
                 
                 #save original webcam image
                 try:
-                    cv2.imwrite("./dataFolder/"+"Full_webcam_frame.png", frame)
+                    numSuf = 0
+                    stNumSuf = str(numSuf).zfill(4)
+                    framePrefix = str(time.time())+"_"
+                    #imageName = saveImagesPath+framePrefix+stNumSuf+'.png'
+                    imageName = saveImagesPath+framePrefix+'.png'
+                    while(os.path.isfile(imageName)): # in case of name clash
+                        numSuf+=1
+                        stNumSuf = '_'+str(numSuf).zfill(4)
+                        imageName = saveImagesPath+framePrefix+stNumSuf+'.png' 
+                    cv2.imwrite(imageName, frame)
                 except Exception as e:
                     print(e)
                     
@@ -105,7 +116,7 @@ class FERServer(asynchat.async_chat):
                     
                     try:
                         im = Image.fromarray(face)
-                        im.save("./dataFolder/"+"Cropped_40_frame.png")
+                        #im.save("./dataFolder/"+"Cropped_40_frame.png")
                         #print(self.saveImagesPath) ################ why doesn't this work?!?!?
                     except Exception as e:
                         print(e)
