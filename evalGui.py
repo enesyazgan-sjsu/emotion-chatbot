@@ -8,7 +8,8 @@ from chatHandler import ChatHandler
 from DoSpeech import DoSpeech
 from PIL import Image, ImageTk
 from multiprocessing.pool import ThreadPool
-
+from dataHandler import DATA
+ 
 import subprocess
 import sys
 
@@ -22,68 +23,6 @@ except:
 
 PATH_TO_DATA = './test.mp4'# "C:\\Users\\emead\\Downloads\\test.mp4"
 
-# DATA class for video, queries, timestamps, responses
-class DATA:
-    def __init__(self, path = None):
-        self.dataDict = {} # timestampStart is the integer part of the time start 
-        # {"timestampStart" : {'vidPath'   : "",\
-        #                      'origQuery' : "",\
-        #                      'augQuery'  : "",\
-        #                      'origResponse' : "",\
-        #                      'augResponse'  : ""} }
-        self.delimElement = '||'
-        self.delimKeyVal = '|+|'
-        if path != None:
-            self.readData(path)
-    def addData(self, ts, vp, oq, aq, orr, ar):
-        self.dataDict[ts] = {'vidPath' : vp, 'origQuery' : oq,\
-                             'augQuery' : aq, 'origResponse' : orr,\
-                             'augResponse' : ar}
-    def printData(self, ts = None):
-        if ts == None:
-            for each in self.dataDict.keys():
-                print(each, self.dataDict[each])
-        else:
-            print(self.dataDict[ts])
-    def removeData(self, ts):
-        del self.dataDict[ts]
-    def saveData(self, savePath = './tempDataSave.txt'):
-        with open(savePath, "w") as f:
-            for timestamp in self.dataDict.keys():
-                stringToWrite = "timestampStart" + self.delimKeyVal + timestamp
-                for element in self.dataDict[timestamp].keys():
-                    temp = self.dataDict[timestamp][element]
-                    stringToWrite = stringToWrite + self.delimElement + element
-                    stringToWrite = stringToWrite + self.delimKeyVal + temp
-                stringToWrite = stringToWrite+'\n'
-                f.write(stringToWrite)
-    def readData(self, readPath = './tempDataSave.txt'):
-        self.dataDict = {}
-        with open(readPath, 'r') as f:
-            for line in f:
-                tempDict = {}
-                for keyVal in line.split(self.delimElement):
-                    kv = keyVal.split(self.delimKeyVal)
-                    if kv[0] == 'timestampStart':
-                        ts = kv[1]
-                    else:
-                        tempDict[kv[0]]=kv[1]
-                self.dataDict[ts]=tempDict
-    def getNext(self):
-        return
-'''
-x = DATA()
-x.addData('45','./','hello','hello(happy)','yes?','you seem happy!')
-x.addData('46','./','hello','hello(happy)','yes?','you seem happy!')
-x.printData()
-x.saveData()
-x.removeData('46')
-print()
-x.printData()
-x.readData()
-print()
-x.printData()
-'''
 
 # GUI_EVAL class for evaluation
 class GUI_EVAL:
@@ -240,19 +179,29 @@ class GUI_EVAL:
                     rely=self.undStartHeight+self.smallButtonHeight+.01)
 
 
-
+        self.Window.bind("<Escape>",self.closeEvalGui)
         self.Window.mainloop()
+
+    def closeEvalGui(self,event):
+        self.videoWindow.destroy()
+        self.Window.destroy()
 
     def makeVideoWindow(self, pathToVideo = None, chatWinWidth = 600, chatWinHeight = 300, minHeight = 10, ratingScale = 10):
         if pathToVideo == None:
             if self.currentVidPath == None:
                 # reached end of available data in DATA
                 print("out of data... aborting video play...")
+                self.videoWindow.destroy()
+                self.currentVidPath = None
+                self.makeVideoWindow(pathToVideo="Video Player")
                 return
             pathToVideo = self.currentVidPath
+            
         self.videoWindow = Toplevel()
         self.videoWindow.configure(width=chatWinWidth, height=chatWinHeight, bg=self.bgColor)
-
+        blankText = 'loading'
+        if pathToVideo == "Video Player":
+            blankText = 'Video Player'
         # center it
         screenWidth = self.videoWindow.winfo_screenwidth()
         screenHeight = self.videoWindow.winfo_screenheight()
@@ -275,11 +224,12 @@ class GUI_EVAL:
                               height=True)
         # video player 
         self.playerLabel = Label(self.videoWindow,\
-                                 justify=CENTER, text="loading")
+                                 justify=CENTER, text=blankText)
         self.playerLabel.place(relwidth=0.98, relheight=0.98, \
                               relx=0.01, rely=0.01)
-        self.setVideo(pathToVideo)
-        self.playVideo()
+        if pathToVideo != "Video Player":
+            self.setVideo(pathToVideo)
+            self.playVideo()
         
     def setVideo(self, newVideo = None):
         if newVideo == None:
@@ -296,10 +246,11 @@ class GUI_EVAL:
             self.currentDataTS = next(self.dataKeyIter, None)
             if self.currentDataTS == None:
                 print("reached the end of the data... aborting video playback...")
-                self.videoWindow.destroy() 
+                self.videoWindow.destroy()
+                self.makeVideoWindow(pathToVideo = 'Video Player')
             self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']
             newVideo = self.currentVidPath
-            
+            print("loading: ",newVideo)
         self.videoWindow.destroy()
         self.currentVidPath = newVideo
         self.makeVideoWindow(pathToVideo = newVideo)

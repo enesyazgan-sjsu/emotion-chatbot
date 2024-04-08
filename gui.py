@@ -9,7 +9,7 @@ from chatHandler import ChatHandler
 from DoSpeech import DoSpeech
 from PIL import Image, ImageTk
 from multiprocessing.pool import ThreadPool
-
+from dataHandler import DATA
 
 # run videostream_loop.py in a cmd window before you run this
 # or have autoSpawnServer try to run it for you
