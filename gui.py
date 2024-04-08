@@ -183,7 +183,8 @@ class GUI:
         # dictionary of available commanable variables and their values
         self.commandList = ['self.showAugmentation','self.useAugmentation', 'self.ferDelay']
         self.restrictAccessToCommandList = False
-        self.currentDataPath = './tempDataSave.txt'
+        self.currentDataPath = './tempDataSave.txt' ########################
+        self.framesFolder = './dataFolder'
         
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
@@ -754,7 +755,8 @@ class GUI:
 
             # record data if enabled #######################
             if self.recordVar.get() == 1:
-                self.recordData()
+                # record the data
+                self.recordData(self.currentDataPath)
                 
             
 
@@ -791,7 +793,47 @@ class GUI:
         # reset input mode to type (until mic is pressed again)
         self.useSpeakType = 'type'
 
-    def recordData(self):
+    def makeVideoFromFrames(self, nameOfVideo='video'):
+        import cv2
+        import os
+
+        try:
+            image_folder = self.framesFolder
+            video_name = image_folder + '/' + nameOfVideo + '.avi'
+
+            images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
+            frame = cv2.imread(os.path.join(image_folder, images[0]))
+            height, width, layers = frame.shape
+
+            video = cv2.VideoWriter(video_name, 0, 1, (width,height))
+
+            for image in images:
+                #print("adding:", image)
+                video.write(cv2.imread(os.path.join(image_folder, image)))
+
+            for pic in os.listdir(image_folder):
+                if pic.endswith(".png"):
+                    os.remove(image_folder+'/'+pic)
+
+            cv2.destroyAllWindows()
+            video.release()
+            pathToVideo = video_name
+            return pathToVideo
+        except Exception as e:
+            print(e)
+            print("Problem with making video, aborting with path './'")
+            try:
+                cv2.destroyAllWindows()
+            except:
+                pass
+            try:
+                video.release()
+            except:
+                pass
+            
+            return './'
+
+    def recordData(self, pathToVideo):                
         print("recording data and appending it to: ", self.currentDataPath)
         # timestampStart|+|45||vidPath|+|./test.mp4||origQuery|+|hello||augQuery|+|hello(happy)||origResponse|+|yes?||augResponse|+|you seem happy!\n
         kvDelim = '|+|'
@@ -804,14 +846,19 @@ class GUI:
             # int portion of start-stop time stamp
             ts = timeStartTyping+'-'+timeStopTyping
         else:
-            ts = timeStartSpeaking+'-'+timeStopTyping
-            
-        vp = './NEEDS_TO_BE_DONE' # path to video
+            ts = timeStartSpeaking+'-'+timeStopSpeaking
+
+        print("...making video: ", ts)
+        pathToVideo = self.makeVideoFromFrames(nameOfVideo = ts)
+
+        vp = pathToVideo # path to video
         oq = self.msg.replace('\n','\\n') # original query
         aq = self.augMsg.replace('\n','\\n') # augmented query
-        orr = 'NEEDS_TO_BE_DONE' # original response
         ar = self.reply.replace('\n','\\n') # augmented response
         
+        # get response without augmentation for recording purposes
+        orr = self.getLLMResponse(query=self.msg) # original response
+
         dataString = 'timestampStart' + kvDelim + ts +\
                      elDelim + 'vidPath' + kvDelim + vp +\
                      elDelim + 'origQuery' + kvDelim + oq +\
