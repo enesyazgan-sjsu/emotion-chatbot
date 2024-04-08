@@ -91,7 +91,7 @@ class FERServer(asynchat.async_chat):
                 
                 #save original webcam image
                 try:
-                    cv2.imwrite(self.saveImagesPath+"Full_webcam_frame.png", frame)
+                    cv2.imwrite("./dataFolder/"+"Full_webcam_frame.png", frame)
                 except Exception as e:
                     print(e)
                     
@@ -105,7 +105,7 @@ class FERServer(asynchat.async_chat):
                     
                     try:
                         im = Image.fromarray(face)
-                        im.save(self.saveImagesPath+"Cropped_40_frame.png")
+                        im.save("./dataFolder/"+"Cropped_40_frame.png")
                         #print(self.saveImagesPath) ################ why doesn't this work?!?!?
                     except Exception as e:
                         print(e)
