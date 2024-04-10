@@ -810,7 +810,7 @@ class GUI:
             #w=Tk()
             #w.wm_withdraw()
             eraseMessages = messagebox.showinfo(message="images found in: "+self.framesFolder+\
-                'continuing will erase them...', title="WARNING")
+                ' continuing will erase them...', title="WARNING")
             if eraseMessages == 'ok':
                 print("deleting single frame images of .png type from: ",self.framesFolder)
                 for each in os.listdir(self.framesFolder):
