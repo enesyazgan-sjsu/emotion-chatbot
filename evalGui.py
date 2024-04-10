@@ -20,13 +20,19 @@ try:
 except:
     subprocess.call([sys.executable, '-m', 'pip', 'install', 'tkvideo'])
 
-
-PATH_TO_DATA = './test.mp4'# "C:\\Users\\emead\\Downloads\\test.mp4"
-
+PATH_TO_OBSERVER_DATA = './observerData.txt' # appends observer judgements to this file
+DATA_PATH = './tempDataSave.txt' # reads in video paths, queries, responses, etc. from this file
 
 # GUI_EVAL class for evaluation
 class GUI_EVAL:
-    def __init__(self, chatWinWidth = 400, chatWinHeight = None, minHeight = 10, ratingScale = 10, dataPath = './tempDataSave.txt'):
+    def __init__(self, chatWinWidth = 400, chatWinHeight = None, minHeight = 10, ratingScale = 10, \
+                 dataPath = None, observerDataPath = None):
+        if observerDataPath == None:
+            self.observerDataPath = PATH_TO_OBSERVER_DATA
+        else:
+            self.observerDataPath = observerDataPath
+        if dataPath == None:
+            dataPath = DATA_PATH
         self.data = DATA(dataPath)
         self.dataKeyIter = iter(self.data.dataDict.keys()) # time stamps iterator
         
@@ -49,6 +55,7 @@ class GUI_EVAL:
         # find first timestamp and video path
         self.currentDataTS = next(self.dataKeyIter, None)
         self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']
+        self.outOfData = False
         
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
@@ -93,6 +100,8 @@ class GUI_EVAL:
         self.playerLabel.place(relwidth=0.56, relheight=self.playerButtonSizeY, \
                               relx=0.22, rely=self.playerLabelHeight)
 
+        # This may be useful if we need to change video players.....?????
+        #PATH_TO_DATA = './test.mp4'# "C:\\Users\\emead\\Downloads\\test.mp4"
         #self.pathToVideo = PATH_TO_DATA
         # this is from https://pypi.org/project/tkVideoUtils/
         #self.audioPath = "./"
@@ -134,7 +143,7 @@ class GUI_EVAL:
         # radio buttons for sympathy
         self.symButList = []
         self.sympathyVar = StringVar()
-        self.sympathyLabel = Label(self.Window, text="sympathyLabel",\
+        self.sympathyLabel = Label(self.Window, text="sympathy",\
                                    justify=CENTER)
         self.sympathyLabel.place(relwidth=0.98, relheight=self.smallButtonHeight,\
                 relx=0.01, rely=self.symStartHeight)
@@ -152,7 +161,7 @@ class GUI_EVAL:
         # radio buttons for appropriateness
         self.appButList = []
         self.appropriatenessVar = StringVar()
-        self.appropriatenessLabel = Label(self.Window, text="appropriatenessLabel",\
+        self.appropriatenessLabel = Label(self.Window, text="appropriateness",\
                                    justify=CENTER)
         self.appropriatenessLabel.place(relwidth=0.98, relheight=self.smallButtonHeight,\
                 relx=0.01, rely=self.appStartHeight)
@@ -170,7 +179,7 @@ class GUI_EVAL:
         # radio buttons for understanding evident
         self.undButList = []
         self.understandVar = StringVar()
-        self.appropriatenessLabel = Label(self.Window, text="understandingLabel",\
+        self.appropriatenessLabel = Label(self.Window, text="understanding",\
                                    justify=CENTER)
         self.appropriatenessLabel.place(relwidth=0.98, relheight=self.smallButtonHeight,\
                 relx=0.01, rely=self.undStartHeight)
@@ -246,21 +255,66 @@ class GUI_EVAL:
         if newVideo == None:
             newVideo = self.currentVidPath
         self.player = tkvideo(newVideo,\
-                 self.playerLabel, loop = 1, size = (self.playerSizeX,self.playerSizeY))
+                 self.playerLabel, loop = 0, size = (self.playerSizeX,self.playerSizeY))
+        
     def playVideo(self):
         self.player.play()
+        
     def rePlayVideo(self):
-        self.nextVideo(newVideo = self.currentVidPath)
+        self.resetButtons()
+        self.videoWindow.destroy()
+        self.makeVideoWindow()
+        self.playVideo()
+        
+    def resetButtons(self):
+        for each in self.symButList:
+            each.deselect()
+        for each in self.appButList:
+            each.deselect()
+        for each in self.undButList:
+            each.deselect()
+        print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
+
+    def recordObserverData(self):
+        print("recording observer ratings and appending it to: ", self.observerDataPath)
+        # timestampStart|+|45||vidPath|+|./test.mp4||origQuery|+|hello||augQuery|+|hello(happy)||origResponse|+|yes?||augResponse|+|you seem happy!\n
+        kvDelim = '|+|'
+        elDelim = '||'
+        ts = str(self.currentDataTS)
+        symResp = self.sympathyVar.get()
+        appResp = self.appropriatenessVar.get()
+        undResp = self.understandVar.get()
+
+        dataString = 'timestampStart' + kvDelim + ts +\
+                     elDelim + 'symResp' + kvDelim + symResp +\
+                     elDelim + 'appResp' + kvDelim + appResp +\
+                     elDelim + 'undResp' + kvDelim + undResp + '\n'
+
+        # if file exists, append data to it
+        if not os.path.isfile(self.observerDataPath):
+            with open(self.observerDataPath,'w') as f:
+                f.write(dataString)
+        else:
+            with open(self.observerDataPath, 'a') as f:
+                f.write(dataString)
+
     def nextVideo(self, newVideo = None):
         try:
             if int(self.appropriatenessVar.get()) > 0 and int(self.sympathyVar.get()) > 0 and \
                                int(self.understandVar.get()) > 0:
                 print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
+                try:
+                    if self.outOfData == False:
+                        self.recordObserverData()
+                except Exception as e:
+                    print(e)
+                    
                 if newVideo == None:
                     # find next timestamp and video path
                     self.currentDataTS = next(self.dataKeyIter, None)
                     if self.currentDataTS == None:
                         print("reached the end of the data... aborting video playback...")
+                        self.outOfData = True
                         self.videoWindow.destroy()
                         self.makeVideoWindow(pathToVideo = 'Video Player')
                         # update buttons
@@ -274,19 +328,13 @@ class GUI_EVAL:
                         # update buttons
                         self.changeQuery(self.data.dataDict[self.currentDataTS]['origQuery'])
                         self.changeResponse(self.data.dataDict[self.currentDataTS]['augResponse'])
-                            
+
                         self.videoWindow.destroy()
                         self.currentVidPath = newVideo
                         self.makeVideoWindow(pathToVideo = newVideo)
                         self.playVideo()
-                    for each in self.symButList:
-                        each.deselect()
-                    for each in self.appButList:
-                        each.deselect()
-                    for each in self.undButList:
-                        each.deselect()
-                    print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
-        except:
+                    self.resetButtons() # clear user's choices off radio buttons
+        except Exception as e:            
             from tkinter import messagebox
             geoString = str(self.chatWinWidth)+"x"+str(self.chatWinHeight-200)+ \
                             "+"+str(self.winXpos)+"+"+str(self.winYpos)

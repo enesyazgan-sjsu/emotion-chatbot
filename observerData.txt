@@ -1,0 +1,7 @@
+timestampStart|+|45||symResp|+|9||appResp|+|9||undResp|+|9
+timestampStart|+|1712552309-1712552311||symResp|+|9||appResp|+|9||undResp|+|9
+timestampStart|+|1712552851-1712552854||symResp|+|9||appResp|+|9||undResp|+|9
+timestampStart|+|1712552861-1712552868||symResp|+|9||appResp|+|9||undResp|+|9
+timestampStart|+|1712719662-1712719695||symResp|+|10||appResp|+|10||undResp|+|10
+timestampStart|+|1712719705-1712719709||symResp|+|10||appResp|+|10||undResp|+|10
+timestampStart|+|1712719776-1712719778||symResp|+|9||appResp|+|9||undResp|+|9
