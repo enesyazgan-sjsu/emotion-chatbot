@@ -41,6 +41,16 @@ SJSU 2024 Grad Project - Emotion Chatbot
 
 ## Install other Python dependencies
 `pip install -r requirements.txt`
+or run installDependancies.py in the installHelp folder if you are still having problems.
+
+## POTENTIAL ISSUE **********************************************
+If networks.DDAM is not being found correctly, you may have to rename a folder called 'networks' to something else, like 'networks_OLD'. 
+This should fix the issue (that networks is being found before the networks folder local to this repository.
+The 'networks' folder should be here:
+    C:\Users\YOUR_USERNAME\AppData\Local\Python\Python310\site-packages
+          or potentially here if you are on a roaming profile:
+    C:\Users\YOUR_USERNAME\AppData\Roaming\Python\Python310\site-packages
+Also, AppData may be hidden from view by default. Choose View->HiddenItems from your file browser window.
 
 ### Helpful Tips
 - If you have trouble constantly installing dependancies for DoSpeech.py, then uncomment the code at the top of DoSpeech.py for the initial run. It will install dependancies on your system for you. Then, you can re-comment it out, afterwards, because it takes a long time.
