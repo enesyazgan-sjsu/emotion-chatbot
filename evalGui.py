@@ -56,7 +56,8 @@ class GUI_EVAL:
         self.currentDataTS = next(self.dataKeyIter, None)
         self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']
         self.outOfData = False
-        
+        self.cantFindVideo = False
+
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
         ###################################
@@ -258,7 +259,14 @@ class GUI_EVAL:
                  self.playerLabel, loop = 0, size = (self.playerSizeX,self.playerSizeY))
         
     def playVideo(self):
-        self.player.play()
+        if os.path.isfile(self.currentVidPath):
+            if self.outOfData == False:
+                self.cantFindVideo = False
+            self.player.play()
+        else:
+            print("Can't find video...")
+            self.playerLabel['text'] = 'trouble finding video - press next video'
+            self.cantFindVideo = True
         
     def rePlayVideo(self):
         self.resetButtons()
@@ -300,11 +308,11 @@ class GUI_EVAL:
 
     def nextVideo(self, newVideo = None):
         try:
-            if int(self.appropriatenessVar.get()) > 0 and int(self.sympathyVar.get()) > 0 and \
-                               int(self.understandVar.get()) > 0:
+            if (int(self.appropriatenessVar.get()) > 0 and int(self.sympathyVar.get()) > 0 and \
+                               int(self.understandVar.get()) > 0) or self.cantFindVideo == True:
                 print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
                 try:
-                    if self.outOfData == False:
+                    if self.outOfData == False and self.cantFindVideo == False:
                         self.recordObserverData()
                 except Exception as e:
                     print(e)
@@ -322,7 +330,7 @@ class GUI_EVAL:
                         self.changeResponse('example response')
                     else:
                         # set new video playing
-                        self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']
+                        self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']                            
                         newVideo = self.currentVidPath
                         print("loading: ",newVideo)
                         # update buttons
