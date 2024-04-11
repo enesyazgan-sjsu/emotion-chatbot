@@ -201,14 +201,26 @@ class GUI_EVAL:
         self.videoWindow.destroy()
         self.Window.destroy()
 
-    def makeVideoWindow(self, pathToVideo = None, chatWinWidth = 600, chatWinHeight = 300, minHeight = 10, ratingScale = 10):
+    def getVideoWindowPositions(self):
+        # winXpos, winYpos, chatWinWidth, chatWinHeight
+        xpos = self.videoWindow.winfo_x()
+        ypos = self.videoWindow.winfo_y()
+        xwidth = self.videoWindow.winfo_width()
+        yheight = self.videoWindow.winfo_height()
+
+        return xpos, ypos, xwidth, yheight
+    
+    def makeVideoWindow(self, pathToVideo = None, chatWinWidth = 600, chatWinHeight = 300, \
+                        minHeight = 10, ratingScale = 10, winXpos = None, winYpos = None):
         if pathToVideo == None:
             if self.currentVidPath == None:
                 # reached end of available data in DATA
                 print("out of data... aborting video play...")
+                xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
                 self.videoWindow.destroy()
                 self.currentVidPath = None
-                self.makeVideoWindow(pathToVideo="Video Player")
+                self.makeVideoWindow(pathToVideo="Video Player",\
+                                     chatWinWidth = xwidth, chatWinHeight = yheight, winXpos = xpos, winYpos = ypos)
                 return
             pathToVideo = self.currentVidPath
             
@@ -217,11 +229,16 @@ class GUI_EVAL:
         blankText = 'loading'
         if pathToVideo == "Video Player":
             blankText = 'Video Player - out of data.'
+            
         # center it
         screenWidth = self.videoWindow.winfo_screenwidth()
         screenHeight = self.videoWindow.winfo_screenheight()
-        winXpos = int((screenWidth-chatWinWidth)/2)
-        winYpos = int(((screenHeight-chatWinHeight)/2)-150)#subtract a little for quick start bar
+
+        if winXpos == None: # center it (otherwise use positions given)
+            winXpos = int((screenWidth-chatWinWidth)/2)
+        if winYpos == None:
+            winYpos = int(((screenHeight-chatWinHeight)/2)-150)#subtract a little for quick start bar
+            
         if winYpos < 0:
             winYpos = 0
         if winXpos < 0:
@@ -270,8 +287,11 @@ class GUI_EVAL:
         
     def rePlayVideo(self):
         self.resetButtons()
+        xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
         self.videoWindow.destroy()
-        self.makeVideoWindow()
+        self.makeVideoWindow(chatWinWidth = xwidth, chatWinHeight = yheight, winXpos = xpos, winYpos = ypos)
+
+        #self.makeVideoWindow()
         self.playVideo()
         
     def resetButtons(self):
@@ -326,8 +346,12 @@ class GUI_EVAL:
                     if self.currentDataTS == None:
                         print("reached the end of the data... aborting video playback...")
                         self.outOfData = True
+                        xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
                         self.videoWindow.destroy()
-                        self.makeVideoWindow(pathToVideo = 'Video Player')
+                        self.makeVideoWindow(pathToVideo="Video Player",\
+                                     chatWinWidth = xwidth, chatWinHeight = yheight, winXpos = xpos, winYpos = ypos)
+
+                        #self.makeVideoWindow(pathToVideo = 'Video Player')
                         # update buttons
                         self.changeQuery('example query')
                         self.changeResponse('example response')
@@ -340,23 +364,29 @@ class GUI_EVAL:
                         self.changeQuery(self.data.dataDict[self.currentDataTS]['origQuery'])
                         self.changeResponse(self.data.dataDict[self.currentDataTS]['augResponse'])
 
+                        
+                        xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
                         self.videoWindow.destroy()
                         self.currentVidPath = newVideo
-                        self.makeVideoWindow(pathToVideo = newVideo)
+
+                        self.makeVideoWindow(pathToVideo=newVideo,\
+                                     chatWinWidth = xwidth, chatWinHeight = yheight, winXpos = xpos, winYpos = ypos)
+                        #self.makeVideoWindow(pathToVideo = newVideo)
                         self.playVideo()
                     self.resetButtons() # clear user's choices off radio buttons
         except Exception as e:
             print(e)
             
             from tkinter import messagebox
-            geoString = str(self.chatWinWidth)+"x"+str(self.chatWinHeight-200)+ \
-                            "+"+str(self.winXpos)+"+"+str(self.winYpos)
+            xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
+            geoString = str(xwidth)+"x"+str('10')+ \
+                            "+"+str(xpos)+"+"+str('0')
             self.videoWindow.geometry(geoString)
 
             eraseMessages = messagebox.showinfo(message="you must rate the video for all aspects \nbefore moving on to the next video", title="WARNING")
 
-            geoString = str(self.chatWinWidth)+"x"+str(self.chatWinHeight)+ \
-                            "+"+str(self.winXpos)+"+"+str(self.winYpos)
+            geoString = str(xwidth)+"x"+str(yheight)+ \
+                            "+"+str(xpos)+"+"+str(ypos)
             self.videoWindow.geometry(geoString)
 
     def changeQuery(self, newText = "changed"):
