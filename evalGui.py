@@ -208,6 +208,7 @@ class GUI_EVAL:
         xwidth = self.videoWindow.winfo_width()
         yheight = self.videoWindow.winfo_height()
 
+        #print(xpos, ypos, xwidth, yheight)
         return xpos, ypos, xwidth, yheight
     
     def makeVideoWindow(self, pathToVideo = None, chatWinWidth = 600, chatWinHeight = 300, \
@@ -239,10 +240,10 @@ class GUI_EVAL:
         if winYpos == None:
             winYpos = int(((screenHeight-chatWinHeight)/2)-150)#subtract a little for quick start bar
             
-        if winYpos < 0:
-            winYpos = 0
-        if winXpos < 0:
-            winXpos = 0
+        #if winYpos < 0:
+        #    winYpos = 0
+        #if winXpos < 0:
+        #    winXpos = 0
 
         # for use later
         self.chatWinWidth=chatWinWidth
