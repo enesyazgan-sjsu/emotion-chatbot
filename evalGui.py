@@ -216,7 +216,7 @@ class GUI_EVAL:
         self.videoWindow.configure(width=chatWinWidth, height=chatWinHeight, bg=self.bgColor)
         blankText = 'loading'
         if pathToVideo == "Video Player":
-            blankText = 'Video Player'
+            blankText = 'Video Player - out of data.'
         # center it
         screenWidth = self.videoWindow.winfo_screenwidth()
         screenHeight = self.videoWindow.winfo_screenheight()
@@ -308,8 +308,11 @@ class GUI_EVAL:
 
     def nextVideo(self, newVideo = None):
         try:
-            if (int(self.appropriatenessVar.get()) > 0 and int(self.sympathyVar.get()) > 0 and \
-                               int(self.understandVar.get()) > 0) or self.cantFindVideo == True:
+            av = self.appropriatenessVar.get()
+            sv = self.sympathyVar.get()
+            uv = self.understandVar.get()
+                        
+            if self.cantFindVideo == True or (int(av) > 0 and int(sv) > 0 and int(uv) > 0):
                 print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
                 try:
                     if self.outOfData == False and self.cantFindVideo == False:
@@ -342,7 +345,9 @@ class GUI_EVAL:
                         self.makeVideoWindow(pathToVideo = newVideo)
                         self.playVideo()
                     self.resetButtons() # clear user's choices off radio buttons
-        except Exception as e:            
+        except Exception as e:
+            print(e)
+            
             from tkinter import messagebox
             geoString = str(self.chatWinWidth)+"x"+str(self.chatWinHeight-200)+ \
                             "+"+str(self.winXpos)+"+"+str(self.winYpos)
