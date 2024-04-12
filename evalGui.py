@@ -286,11 +286,16 @@ class GUI_EVAL:
             self.playerLabel['text'] = 'trouble finding video - press next video'
             self.cantFindVideo = True
         
-    def rePlayVideo(self):
+    def rePlayVideo(self, remakeVidPath=None):
         self.resetButtons()
         xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
         self.videoWindow.destroy()
-        self.makeVideoWindow(chatWinWidth = xwidth, chatWinHeight = yheight, winXpos = xpos, winYpos = ypos)
+        if remakeVidPath != None:
+            self.makeVideoWindow(pathToVideo=remakeVidPath, chatWinWidth = xwidth, \
+                                 chatWinHeight = yheight, winXpos = xpos, winYpos = ypos)
+        else:
+            self.makeVideoWindow(chatWinWidth = xwidth, chatWinHeight = yheight, \
+                                 winXpos = xpos, winYpos = ypos)
 
         #self.makeVideoWindow()
         self.playVideo()
@@ -328,37 +333,43 @@ class GUI_EVAL:
                 f.write(dataString)
 
     def nextVideo(self, newVideo = None):
-        try:
-            av = self.appropriatenessVar.get()
-            sv = self.sympathyVar.get()
-            uv = self.understandVar.get()
-                        
-            if self.cantFindVideo == True or (int(av) > 0 and int(sv) > 0 and int(uv) > 0):
-                print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
-                try:
-                    if self.outOfData == False and self.cantFindVideo == False:
-                        self.recordObserverData()
-                except Exception as e:
-                    print(e)
-                    
-                if newVideo == None:
-                    # find next timestamp and video path
-                    self.currentDataTS = next(self.dataKeyIter, None)
-                    if self.currentDataTS == None:
-                        print("reached the end of the data... aborting video playback...")
-                        self.outOfData = True
-                        xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
-                        self.videoWindow.destroy()
-                        self.makeVideoWindow(pathToVideo="Video Player",\
-                                     chatWinWidth = xwidth, chatWinHeight = yheight, winXpos = xpos, winYpos = ypos)
+        av = self.appropriatenessVar.get()
+        if av=='':
+            av=0
+        sv = self.sympathyVar.get()
+        if sv=='':
+            sv=0
+        uv = self.understandVar.get()
+        if uv=='':
+            vu=0
 
-                        #self.makeVideoWindow(pathToVideo = 'Video Player')
-                        # update buttons
-                        self.changeQuery('example query')
-                        self.changeResponse('example response')
-                    else:
-                        # set new video playing
-                        self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']                            
+        if self.cantFindVideo == True or (int(av) > 0 and int(sv) > 0 and int(uv) > 0):
+            print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
+            try:
+                if self.outOfData == False and self.cantFindVideo == False:
+                    self.recordObserverData()
+            except Exception as e:
+                print(e)
+            #print("New video = ",newVideo,'\n',self.data.dataDict[self.currentDataTS])
+            if newVideo == None:
+                # find next timestamp and video path
+                self.currentDataTS = next(self.dataKeyIter, None)
+                if self.currentDataTS == None:
+                    print("reached the end of the data... aborting video playback...")
+                    self.outOfData = True
+                    xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
+                    self.videoWindow.destroy()
+                    self.makeVideoWindow(pathToVideo="Video Player",\
+                                 chatWinWidth = xwidth, chatWinHeight = yheight, winXpos = xpos, winYpos = ypos)
+
+                    #self.makeVideoWindow(pathToVideo = 'Video Player')
+                    # update buttons
+                    self.changeQuery('example query')
+                    self.changeResponse('example response')
+                else:
+                    # set new video playing if all data is present - or skip.
+                    try:
+                        self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']                           
                         newVideo = self.currentVidPath
                         print("loading: ",newVideo)
                         # update buttons
@@ -373,23 +384,30 @@ class GUI_EVAL:
                         self.makeVideoWindow(pathToVideo=newVideo,\
                                      chatWinWidth = xwidth, chatWinHeight = yheight, winXpos = xpos, winYpos = ypos)
                         #self.makeVideoWindow(pathToVideo = newVideo)
-                        self.playVideo()
-                    self.resetButtons() # clear user's choices off radio buttons
-        except Exception as e:
-            print(e)
-            
-            from tkinter import messagebox
-            xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
-            geoString = str(xwidth)+"x"+str('10')+ \
-                            "+"+str(xpos)+"+"+str('0')
-            self.videoWindow.geometry(geoString)
+                        #self.playVideo()
+                        print("nextVideo..........................................")
+                    except Exception as e:
+                        self.rePlayVideo()
+                        print(e)
+                        print("problem loading new data... skipping...")
+                self.resetButtons() # clear user's choices off radio buttons
+        else:
+            if self.outOfData != True:
+                self.showWarning()
 
-            eraseMessages = messagebox.showinfo(message="you must rate the video for all aspects \nbefore moving on to the next video", title="WARNING")
+    def showWarning(self, msg = "you must rate the video for all aspects \nbefore moving on to the next video"):
+        from tkinter import messagebox
+        xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
+        geoString = str(xwidth)+"x"+str('10')+ \
+                        "+"+str(xpos)+"+"+str('0')
+        self.videoWindow.geometry(geoString)
 
-            geoString = str(xwidth)+"x"+str(yheight)+ \
-                            "+"+str(xpos)+"+"+str(ypos)
-            self.videoWindow.geometry(geoString)
+        eraseMessages = messagebox.showinfo(message=msg, title="WARNING")
 
+        geoString = str(xwidth)+"x"+str(yheight)+ \
+                        "+"+str(xpos)+"+"+str(ypos)
+        self.videoWindow.geometry(geoString)
+        
     def changeQuery(self, newText = "changed"):
         self.queryLabel["text"]=newText
         self.queryLabel.update()
