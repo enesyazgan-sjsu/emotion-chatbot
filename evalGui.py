@@ -256,8 +256,8 @@ class GUI_EVAL:
         self.videoWindow.geometry(geoString)
         self.videoWindow.attributes("-topmost",True)
         #self.videoWindow.grab_set()
-        self.videoWindow.focus()         
-        self.videoWindow.deiconify()
+        #self.videoWindow.focus()         
+        #self.videoWindow.deiconify()
         self.videoWindow.title("Video Player")
         self.videoWindow.resizable(width=True,
                               height=True)
@@ -269,7 +269,7 @@ class GUI_EVAL:
         if pathToVideo != "Video Player":
             self.setVideo(pathToVideo)
             self.playVideo()
-        
+    
     def setVideo(self, newVideo = None):
         if newVideo == None:
             newVideo = self.currentVidPath
@@ -378,13 +378,18 @@ class GUI_EVAL:
 
                         
                         xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
-                        self.videoWindow.destroy()
+                        try:
+                            pass # THIS is causing the tkvideo error.............................. not sure why.
+                            if self.videoWindow.winfo_exists():
+                                #print("The following error is inexplicable but doesn't cause any issues.")
+                                self.videoWindow.destroy()
+                        except:
+                            pass
                         self.currentVidPath = newVideo
 
                         self.makeVideoWindow(pathToVideo=newVideo,\
                                      chatWinWidth = xwidth, chatWinHeight = yheight, winXpos = xpos, winYpos = ypos)
-                        #self.makeVideoWindow(pathToVideo = newVideo)
-                        #self.playVideo()
+
                         print("nextVideo..........................................")
                     except Exception as e:
                         self.rePlayVideo()
