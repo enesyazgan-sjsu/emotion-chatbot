@@ -25,7 +25,7 @@ DATA_PATH = './tempDataSave.txt' # reads in video paths, queries, responses, etc
 
 # GUI_EVAL class for evaluation
 class GUI_EVAL:
-    def __init__(self, chatWinWidth = 400, chatWinHeight = None, minHeight = 10, ratingScale = 10, \
+    def __init__(self, chatWinWidth = 400, chatWinHeight = None, minHeight = 10, ratingScale = 5, \
                  dataPath = None, observerDataPath = None):
         if observerDataPath == None:
             self.observerDataPath = PATH_TO_OBSERVER_DATA
@@ -48,9 +48,9 @@ class GUI_EVAL:
         self.bgColor = "#17202A"
         self.relTopOfWindow = 0.01
         self.buttonHeight = 0.05
-        self.smallButtonHeight = 0.03
+        self.smallButtonHeight = 0.02
         self.ratingButtonWidth= 0.05
-        self.symStartHeight = 0.74
+        self.symStartHeight = 0.72
         self.buffer = 0.01
         # find first timestamp and video path
         self.currentDataTS = next(self.dataKeyIter, None)
@@ -176,13 +176,15 @@ class GUI_EVAL:
                     rely=self.appStartHeight+self.smallButtonHeight+.01)
             self.appButList.append(x)
             
-        self.undStartHeight = self.appStartHeight +  (self.smallButtonHeight*2) + (self.buffer*2)
+        self.undStartHeight = self.appStartHeight +  \
+                              (self.smallButtonHeight*2) + \
+                              (self.buffer*2)
         # radio buttons for understanding evident
         self.undButList = []
         self.understandVar = StringVar()
-        self.appropriatenessLabel = Label(self.Window, text="understanding",\
+        self.understandingLabel = Label(self.Window, text="understanding",\
                                    justify=CENTER)
-        self.appropriatenessLabel.place(relwidth=0.98, relheight=self.smallButtonHeight,\
+        self.understandingLabel.place(relwidth=0.98, relheight=self.smallButtonHeight,\
                 relx=0.01, rely=self.undStartHeight)
         for each in range(ratingScale):
             x = Radiobutton(self.Window, text=str(each+1),\
@@ -193,6 +195,27 @@ class GUI_EVAL:
                     relx=.01+(each*(1/ratingScale)),\
                     rely=self.undStartHeight+self.smallButtonHeight+.01)
             self.undButList.append(x)
+
+        self.ovlStartHeight = self.undStartHeight + \
+                              (self.smallButtonHeight*2) + \
+                              (self.buffer*2)
+        #self.undStartHeight = self.appStartHeight +  (self.smallButtonHeight*2) + (self.buffer*2)
+        # radio buttons for overall evident
+        self.ovlButList = []
+        self.overallVar = StringVar()
+        self.overallLabel = Label(self.Window, text="overall experience",\
+                                   justify=CENTER)
+        self.overallLabel.place(relwidth=0.98, relheight=self.smallButtonHeight,\
+                relx=0.01, rely=self.ovlStartHeight)
+        for each in range(ratingScale):
+            x = Radiobutton(self.Window, text=str(each+1),\
+                            variable=self.overallVar,\
+                        value=str(each+1),tristatevalue=0,\
+                            command=self.recordOverallValue)
+            x.place(relwidth=self.ratingButtonWidth,relheight=self.smallButtonHeight,\
+                    relx=.01+(each*(1/ratingScale)),\
+                    rely=self.ovlStartHeight+self.smallButtonHeight+.01)
+            self.ovlButList.append(x)
 
         self.Window.bind("<Escape>",self.closeEvalGui)
         self.Window.mainloop()
@@ -239,11 +262,6 @@ class GUI_EVAL:
             winXpos = int((screenWidth-chatWinWidth)/2)
         if winYpos == None:
             winYpos = int(((screenHeight-chatWinHeight)/2)-150)#subtract a little for quick start bar
-            
-        #if winYpos < 0:
-        #    winYpos = 0
-        #if winXpos < 0:
-        #    winXpos = 0
 
         # for use later
         self.chatWinWidth=chatWinWidth
@@ -307,7 +325,10 @@ class GUI_EVAL:
             each.deselect()
         for each in self.undButList:
             each.deselect()
-        print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
+        for each in self.ovlButList:
+            each.deselect()
+        print(self.sympathyVar.get(), self.appropriatenessVar.get(), \
+              self.understandVar.get(), self.overallVar.get())
 
     def recordObserverData(self):
         print("recording observer ratings and appending it to: ", self.observerDataPath)
@@ -318,11 +339,13 @@ class GUI_EVAL:
         symResp = self.sympathyVar.get()
         appResp = self.appropriatenessVar.get()
         undResp = self.understandVar.get()
-
+        ovlResp = self.overallVar.get()
+        
         dataString = 'timestampStart' + kvDelim + ts +\
                      elDelim + 'symResp' + kvDelim + symResp +\
                      elDelim + 'appResp' + kvDelim + appResp +\
-                     elDelim + 'undResp' + kvDelim + undResp + '\n'
+                     elDelim + 'undResp' + kvDelim + undResp +\
+                     elDelim + 'ovlResp' + kvDelim + ovlResp + '\n'
 
         # if file exists, append data to it
         if not os.path.isfile(self.observerDataPath):
@@ -341,10 +364,15 @@ class GUI_EVAL:
             sv=0
         uv = self.understandVar.get()
         if uv=='':
-            vu=0
+            uv=0
+        ov = self.overallVar.get()
+        if ov=='':
+            ov=0
 
-        if self.cantFindVideo == True or (int(av) > 0 and int(sv) > 0 and int(uv) > 0):
-            print(self.sympathyVar.get(), self.appropriatenessVar.get(), self.understandVar.get())
+        if self.cantFindVideo == True or \
+           (int(av) > 0 and int(sv) > 0 and int(uv) > 0 and int(ov)):
+            print(self.sympathyVar.get(), self.appropriatenessVar.get(),\
+                  self.understandVar.get(), self.overallVar.get())
             try:
                 if self.outOfData == False and self.cantFindVideo == False:
                     self.recordObserverData()
@@ -425,7 +453,9 @@ class GUI_EVAL:
         pass
     def recordUnderstandValue(self):
         pass
-
+    def recordOverallValue(self):
+        pass
+    
 def main():
     evalWin = GUI_EVAL()
 
