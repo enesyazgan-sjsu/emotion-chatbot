@@ -185,6 +185,9 @@ class GUI:
         self.restrictAccessToCommandList = False
         self.currentDataPath = './tempDataSave.txt' ########################
         self.framesFolder = './dataFolder'
+        self.stopSavingImagesPath = self.framesFolder + '/STOP.txt'
+        # if the STOP file exists, the server will check for it and NOT save any images
+        self.stopRecordingUser() # save STOP file to tell server not to record images
         
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
@@ -496,10 +499,23 @@ class GUI:
             
             
     def startRecordingUser(self):
-        pass
-
+        if self.recordVar.get() == 1:
+            if os.path.exists(self.stopSavingImagesPath): # file is saved and server is NOT saving images
+                os.remove(self.stopSavingImagesPath) # remove file to tell server to start saving images
+                return "file removed - server will START saving images"
+            else:
+                return "file did not exist - server IS saving images" # file does not exists, so the server will not save images.
+        else:
+            print("recording requested, but record check box is not set - aborting recording...")
+            return "recording requested, but record check box is not set - aborting recording..."
+        
     def stopRecordingUser(self):
-        pass
+        if os.path.exists(self.stopSavingImagesPath): # file is saved and server is NOT saving images
+            return "file exists - server is NOT saving images"
+        else:
+            with open(self.stopSavingImagesPath,'w') as f:
+                pass # make file to tell server to stop saving images
+            return "file created - server will STOP saving images" # file does not exists, so the server will not save images.
 
     def clearInputBox(self):
         self.entryMsg.config(state=NORMAL)
@@ -577,6 +593,7 @@ class GUI:
                 self.ferHistResults = [] # clear the emotion list to get emotions only for this session
                 self.userStartedTyping = True
                 self.timeStartTyping = time.time()
+                self.startRecordingUser()
                 print("user started typing at: ", self.timeStartTyping)
                 self.timeStopTyping = time.time() # keep this up to the last key pressed
             else:
@@ -724,8 +741,10 @@ class GUI:
         self.userStartedTyping = False # user has sent a message and has not yet started typing again
         #self.timeStopTyping = time.time()
         if self.useSpeakType == 'type':
+            self.stopRecordingUser()
             print("user stopped typing this message at: ", self.timeStopTyping)
         else:
+            self.stopRecordingUser()
             print("user stopped speaking this message at: ", self.timeStopSpeaking)
         print(self.ferHistResults)            
         print()
