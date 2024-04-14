@@ -60,16 +60,17 @@ Also, AppData may be hidden from view by default. Choose View->HiddenItems from 
 **************************
 
 ## User interface
-- Will start the GUI client and attempt to launch the backend server
-`python gui.py`
+- `python gui.py` will start the GUI client and attempt to launch the backend server
+
 
 ## Evaluation (observers) interface
-- Will start the evaluation software reading tempDataSave.txt and dataFolder/* for saved (from gui sessions) data
+- `python evalGui.py` will start the evaluation software reading tempDataSave.txt and dataFolder/* for saved (from gui sessions) data
 - and it will output observer ratings to observerData.txt
 
 ## Calculate the semantic similarity of saved data
-- Will read in tempDataSave.txt, calculate semantic similarity between original response and augmented response
+- `python calcSimilarity.py` will read in tempDataSave.txt, calculate semantic similarity between original response and augmented response
 - and output to dataWithSim.txt
+  
 ### Helpful Tips
 - If this fails, then change `useAutoSpawn = False`, at the top of gui.py, run `python videostream_loop.py` in one terminal, and `python gui.py` in another (after)
 - To run only the GUI (without webcam server), set `useServer = False`, at top of gui.py
