@@ -12,6 +12,8 @@ class DATA:
         self.delimKeyVal = '|+|'
         if path != None:
             self.readData(path)
+        self.averageSimilarity = None
+        
     def addData(self, ts, vp, oq, aq, orr, ar):
         self.dataDict[ts] = {'vidPath' : vp, 'origQuery' : oq,\
                              'augQuery' : aq, 'origResponse' : orr,\
