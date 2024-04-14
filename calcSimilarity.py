@@ -81,3 +81,5 @@ class calcSimilarity:
 
 sim = calcSimilarity()
 print("\nsimilarity average = ", sim.x.averageSimilarity)
+#print("\nsimilarity average = ", sim.average)
+#print(sim.x.dataDict)

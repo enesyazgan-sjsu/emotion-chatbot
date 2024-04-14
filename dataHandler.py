@@ -33,6 +33,8 @@ class DATA:
                 stringToWrite = "timestampStart" + self.delimKeyVal + timestamp
                 for element in self.dataDict[timestamp].keys():
                     temp = self.dataDict[timestamp][element]
+                    temp = temp.replace('\n','\\n')
+                    temp = temp.replace('\\n\\n','\\n')
                     stringToWrite = stringToWrite + self.delimElement + element
                     stringToWrite = stringToWrite + self.delimKeyVal + temp
                 stringToWrite = stringToWrite+'\n'
