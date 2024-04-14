@@ -8,7 +8,7 @@ installList = ['opencv-python', 'pillow', 'torch', 'torchvision',
 	      'socket', 'openai']
 
 installList.extend(['SpeechRecognition','libasound2-dev', 'portaudio19-dev',
-                'libportaudio2', 'libportaudiocpp0', 'ffmpeg', 'pyaudio', 'tkvideo'])
+                'libportaudio2', 'libportaudiocpp0', 'ffmpeg', 'pyaudio', 'tkvideo', 'sentence_transformers'])
 
 for each in installList:
 	install(each)
