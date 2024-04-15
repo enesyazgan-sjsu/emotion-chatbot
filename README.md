@@ -55,6 +55,28 @@ Also, AppData may be hidden from view by default. Choose View->HiddenItems from 
 ### Helpful Tips
 - If you have trouble constantly installing dependancies for DoSpeech.py, then uncomment the code at the top of DoSpeech.py for the initial run. It will install dependancies on your system for you. Then, you can re-comment it out, afterwards, because it takes a long time.
 
+***********************************************************************************************************
+
+**************************
+# **Instructions: Collecting Data**
+**************************
+Delete your "dataFolder" folder and your 'tempDataSave.txt' file (it will create new ones)
+Run gui.py
+click 'record...' at the bottom and have a chat with ChatGPT (it can hang between inputs... just wait it out)
+make at least ten comments
+THEN...
+copy your dataFolder and tempDataSave.txt into a new folder named, for example, 'eric_0' and put that in DATA_FOR_REVIEW
+
+**************************
+# **Instructions: Reviewing Data**
+**************************
+Run some version of reviewHelper.py (customize it to match your paths and such)
+Watch someone else's videos and compare with the emotion reviewHelper spits out for that video
+If you agree with the emotion, make note of that video's name somewhere
+These lists will be compiled together and used for our observer's to evaluate.
+
+************************************************************************************************************
+
 **************************
 # **Instructions: How to Run**
 **************************
