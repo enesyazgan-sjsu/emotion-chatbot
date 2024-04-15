@@ -188,7 +188,7 @@ class GUI:
         self.stopSavingImagesPath = self.framesFolder + '/STOP.txt'
         # if the STOP file exists, the server will check for it and NOT save any images
         self.stopRecordingUser() # save STOP file to tell server not to record images
-        
+
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
         ###################################
@@ -510,6 +510,9 @@ class GUI:
             return "recording requested, but record check box is not set - aborting recording..."
         
     def stopRecordingUser(self):
+        if not os.path.isdir(self.framesFolder):
+            os.makedirs(self.framesFolder)
+            
         if os.path.exists(self.stopSavingImagesPath): # file is saved and server is NOT saving images
             return "file exists - server is NOT saving images"
         else:
@@ -819,7 +822,8 @@ class GUI:
         # in the data folder (this would interfere with collecting
         # new data
         flagUser = False
-        print('checking data folder for stray images...')
+
+        print('checking ', self.framesFolder, '\ndata folder for stray images...')
         for each in os.listdir(self.framesFolder):
             if each.endswith(".png"):
                 flagUser = True

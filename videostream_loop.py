@@ -77,6 +77,8 @@ class FERServer(asynchat.async_chat):
     def run_fer_loop(self, frame_cap = None, width=112, height=112, cam_port=0):
         class_names = ['Neutral', 'Happy', 'Sad', 'Surprise', 'Fear', 'Disgust', 'Angry'] 
         saveImagesPath = "./dataFolder/"
+        if not os.path.isdir(saveImagesPath):
+            os.makedirs(saveImagesPath)
         # the stop file tells the server NOT to save images (if it exists)
         stopSavingImagesPath = saveImagesPath + 'STOP.txt'
         
