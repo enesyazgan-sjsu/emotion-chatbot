@@ -102,6 +102,11 @@ class GUI:
     # constructor method with video stream client
     # set client  to None for gui only
     def __init__(self, client):
+        # change this to match approximate speed of your system
+        # Time the first video you make, and the output will show you
+        # how many frames were produced.... frames/seconds = fps
+        # if set to zero, it will try to calculate a good speed itself
+        self.fpsForVideos = 0 # generally 2  
         ###additional variables####
         if client == None:
             self.usingServer = False
@@ -442,7 +447,8 @@ class GUI:
         self.recordVar = IntVar()
         self.recordCheckbutton = Checkbutton(self.labelBottom, \
                     text = 'record/add data to: '+self.currentDataPath,\
-                    variable=self.recordVar, onvalue=1, offval=0)
+                    variable=self.recordVar, onvalue=1, offval=0,\
+                        command=self.startStopRecording)
         self.recordCheckbutton.place(relx=0.01,
                              rely=0.076,
                              relheight=0.02,
@@ -496,7 +502,11 @@ class GUI:
             # speech analysis should continue until ready to rejoin
             # analyzeSpeech handles the refresh of the interface
             ################################################################################
-            
+
+    def startStopRecording(self):
+        if self.recordVar.get() == 0:
+            self.stopRecordingUser()
+            self.deleteAllSingleFrameImagesInFramesFolder()
             
     def startRecordingUser(self):
         if self.recordVar.get() == 1:
@@ -847,13 +857,15 @@ class GUI:
         # when the query began and ended 
         try:
             image_folder = self.framesFolder
-            video_name = image_folder + '/' + nameOfVideo + '.avi'
+            video_name = image_folder + '/' + nameOfVideo + '.mp4'#'.avi'
 
             images = []#img for img in os.listdir(image_folder) if img.endswith(".png")]
+            fpsCalc = []
             for each in os.listdir(image_folder):
                 if each.endswith(".png"):
                     try:
                         timestamp = int(each.split('.')[0])
+                        fpsCalc.append(timestamp)
                         if timestamp >= start and timestamp <= stop:
                             images.append(each)
                     except Exception as e:
@@ -861,13 +873,22 @@ class GUI:
                         print("Problem with finding images for recording...")
             print(images[:3])
             print(images[-3:])
-
+            if self.fpsForVideos == 0: # calculate fps manually
+                # sort fpsCalc list
+                fpsCalc.sort() # ascending order)
+                print(fpsCalc)
+                # find average seconds per frame
+                # set fps for average speed of camera image recordings
+                self.fpsForVideos = round(len(fpsCalc) / (fpsCalc[-1] - fpsCalc[0]) )
+                self.fpsForVideos += 1 # helps with rounding and slows the video somewhat
+    
             frame = cv2.imread(os.path.join(image_folder, images[0]))
             height, width, layers = frame.shape
             #width = 600 # can't seem to change this with current technique
             #height = 300
-            video = cv2.VideoWriter(video_name, 0, 1, (width,height))
-
+            video = cv2.VideoWriter(video_name, 0, self.fpsForVideos, (width,height))
+            print("using: ",self.fpsForVideos, " fps...")
+            
             for image in images:
                 #print("adding:", image)
                 video.write(cv2.imread(os.path.join(image_folder, image)))
