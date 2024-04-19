@@ -51,25 +51,29 @@ def mkdir_if_dne(directory):
 def main():
     main_dataset_folder = "./emotion_dataset/"
     mkdir_if_dne(main_dataset_folder)
+    user_name = "enes"
+    data_number = 4
     
     
     class_names = ['Neutral', 'Happy', 'Sad', 'Surprise', 'Fear', 'Disgust', 'Angry']  
-    emotion = class_names[6]
-    emotion_subfolder = main_dataset_folder + emotion + "/"
-    mkdir_if_dne(emotion_subfolder)
     
-    
-    category_maximum = 300
-    num_frames_to_capture = 100
-    target_resolution = None#(256,256)
-    delay_between_frames_s = 0.05 #capture delay in seconds
-    
-    print("You are about to capture " + str(num_frames_to_capture) + " images.")
-    print("Make sure to appear: " + str(emotion))
-    print("Get ready!")
-    
-    capture_database_frames(emotion_subfolder, num_frames_to_capture, category_maximum, target_resolution = target_resolution, delay_s = delay_between_frames_s)
-    
+    for emotion in class_names:
+        #emotion = class_names[0]
+        emotion_subfolder = main_dataset_folder + emotion+"_"+user_name + "_"+str(data_number)+"/"
+        mkdir_if_dne(emotion_subfolder)
+        
+        
+        category_maximum = 300
+        num_frames_to_capture = 100
+        target_resolution = None#(256,256)
+        delay_between_frames_s = 0.05 #capture delay in seconds
+        
+        print("You are about to capture " + str(num_frames_to_capture) + " images.")
+        print("Make sure to appear: " + str(emotion))
+        print("Get ready!")
+        
+        capture_database_frames(emotion_subfolder, num_frames_to_capture, category_maximum, target_resolution = target_resolution, delay_s = delay_between_frames_s)
+        
     
 if __name__ == "__main__":
     main()
