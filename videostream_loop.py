@@ -119,13 +119,16 @@ class FERServer(asynchat.async_chat):
                 
                 if face is not None:
                     face = face.permute(1, 2, 0).numpy().astype(np.uint8)
+                    face = face[...,::-1]
                     
+                    """
                     try:
                         im = Image.fromarray(face)
                         #im.save("./dataFolder/"+"Cropped_40_frame.png")
                         #print(self.saveImagesPath) ################ why doesn't this work?!?!?
                     except Exception as e:
                         print(e)
+                    """
 
 
                     #make prediction with DDAMFN
@@ -155,7 +158,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=128, help='Batch size.')
     parser.add_argument('--workers', default=8, type=int, help='Number of data loading workers.')
     parser.add_argument('--num_head', type=int, default=2, help='Number of attention head.')
-    parser.add_argument('--model_path', default = './checkpoints/rafdb.pth')
+    parser.add_argument('--model_path', default = './checkpoints_ver2.0/rafdb_epoch20_acc0.9204_bacc0.8617.pth')
     return parser.parse_args()
 
 def main():
@@ -173,6 +176,8 @@ def main():
     print("Loading FER Model")
     args = parse_args()
     fer_model = DDAMNet(num_class=7,num_head=args.num_head)
+    checkpoint = torch.load(args.model_path, map_location=device)
+    fer_model.load_state_dict(checkpoint['model_state_dict'])
     fer_model.to(device)
     fer_model.eval() 
 
