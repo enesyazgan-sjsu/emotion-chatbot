@@ -158,7 +158,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=128, help='Batch size.')
     parser.add_argument('--workers', default=8, type=int, help='Number of data loading workers.')
     parser.add_argument('--num_head', type=int, default=2, help='Number of attention head.')
-    parser.add_argument('--model_path', default = './checkpoints_ver2.0/rafdb_epoch20_acc0.9204_bacc0.8617.pth')
+    parser.add_argument('--model_path', default = './checkpoints_ver2.0/FER_epoch53_acc0.8959_bacc0.8906.pth')
     return parser.parse_args()
 
 def main():
