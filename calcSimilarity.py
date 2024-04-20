@@ -68,10 +68,17 @@ class calcSimilarity:
     def calcAverage(self):
         totNum = 0
         totSim = 0.0
+        self.lowest = 0.5
+        self.highest = 0.5
         for each in self.x.dataDict.keys():
             try:
-                totSim = totSim + float(self.x.dataDict[each]['semSim'])
+                ss = float(self.x.dataDict[each]['semSim'])
+                totSim = totSim + ss
                 totNum +=1
+                if ss < self.lowest:
+                    self.lowest = ss
+                if ss > self.highest:
+                    self.highest = ss
             except Exception as e:
                 print(e)
                 print("problem with ",each,"skipping...")
@@ -81,5 +88,7 @@ class calcSimilarity:
 
 sim = calcSimilarity()
 print("\nsimilarity average = ", sim.x.averageSimilarity)
+print("\nsimilarity lowest = ", sim.lowest)
+print("\nsimilarity highest = ", sim.highest)
 #print("\nsimilarity average = ", sim.average)
 #print(sim.x.dataDict)
