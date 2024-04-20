@@ -44,10 +44,11 @@ class DATA:
         self.dataDict = {}
         with open(readPath, 'r') as f:
             for line in f:
+                #print(line)
                 tempDict = {}
                 for keyVal in line.split(self.delimElement):
                     kv = keyVal.split(self.delimKeyVal)
-                    if kv[0] == 'timestampStart':
+                    if 'timestampStart' in kv[0]:
                         ts = kv[1]
                     else:
                         tempDict[kv[0]]=kv[1]
