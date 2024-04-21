@@ -130,13 +130,13 @@ class GUI_EVAL:
             
         # responses and button labels
         self.queryLabelHeight = self.playerLabelHeight + self.playerButtonSizeY + self.buffer 
-        self.queryLabel = Label(self.Window, text="example query",\
+        self.queryLabel = Label(self.Window, text=self.data.dataDict[self.currentDataTS]['origQuery'],\
                                 justify=CENTER)
         self.queryLabel.place(relwidth=0.98, relheight=self.buttonHeight, \
                               relx=0.01, rely=self.queryLabelHeight)
         
         self.responseLabelHeight = self.queryLabelHeight +self.buttonHeight + self.buffer
-        self.responseLabel = Label(self.Window, text="example response",\
+        self.responseLabel = Label(self.Window, text=self.data.dataDict[self.currentDataTS]['augResponse'],\
                                 justify=CENTER)
         self.responseLabel.place(relwidth=0.98, relheight=self.buttonHeight, \
                               relx=0.01, rely=self.responseLabelHeight)
@@ -291,10 +291,6 @@ class GUI_EVAL:
     def setVideo(self, newVideo = None):
         if newVideo == None:
             newVideo = self.currentVidPath
-        try:
-            self.player
-        except: # play test on open
-            newVideo = './test.mp4'
         self.player = tkvideo(newVideo,\
                  self.playerLabel, loop = 0, size = (self.playerSizeX,self.playerSizeY))
         
