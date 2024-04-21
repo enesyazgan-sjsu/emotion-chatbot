@@ -99,7 +99,6 @@ class GUI_EVAL:
 
         # video player window
         self.makeVideoWindow()
-        self.makeTextWindow()
         
         # video player label
         self.playerLabelHeight = self.videoLabelHeight + self.buttonHeight + self.buffer
@@ -137,20 +136,21 @@ class GUI_EVAL:
             
         # responses and button labels
         self.queryLabelHeight = self.playerLabelHeight + self.playerButtonSizeY + self.buffer 
-        self.queryLabel = Label(self.Window, text=self.data.dataDict[self.currentDataTS]['origQuery'],\
+        tq = self.data.dataDict[self.currentDataTS]['origQuery']
+        self.queryLabel = Label(self.Window, text=tq,\
                                 justify=CENTER)
         self.queryLabel.place(relwidth=0.98, relheight=self.buttonHeight, \
                               relx=0.01, rely=self.queryLabelHeight)
         
         self.responseLabelHeight = self.queryLabelHeight +self.buttonHeight + self.buffer
-        t = self.data.dataDict[self.currentDataTS]['augResponse']
+        tr = self.data.dataDict[self.currentDataTS]['augResponse']
         if self.randomizeResponse and (self.seeAugResp == False):
-            t = self.data.dataDict[self.currentDataTS]['origResponse']
-        self.responseLabel = Label(self.Window, text=t,\
+            tr = self.data.dataDict[self.currentDataTS]['origResponse']
+        self.responseLabel = Label(self.Window, text=tr,\
                                 justify=CENTER)
         self.responseLabel.place(relwidth=0.98, relheight=self.buttonHeight, \
                               relx=0.01, rely=self.responseLabelHeight)
-
+        
         # radio buttons for sympathy
         self.symButList = []
         self.sympathyVar = StringVar()
@@ -227,6 +227,8 @@ class GUI_EVAL:
                     rely=self.ovlStartHeight+self.smallButtonHeight+.01)
             self.ovlButList.append(x)
 
+        self.makeTextWindow()
+
         self.Window.bind("<Escape>",self.closeEvalGui)
         self.Window.mainloop()
 
@@ -249,19 +251,28 @@ class GUI_EVAL:
         self.textWindow = Toplevel()
         self.textWindow.resizable(width=True, height=True)
         self.textWindow.attributes("-topmost",True)
+
+        geoString = "300x400+10+10" # "200x150+100+100"
+        self.textWindow.geometry(geoString)
+        self.textWindow.configure(width=300, height=350)
+
+        t =self.data.dataDict[self.currentDataTS]['origQuery']
         self.fullQueryLabel = Label(self.textWindow,\
-                                 justify=CENTER, text="USER QUERY\n\n"+self.data.dataDict[self.currentDataTS]['origQuery'])
+                                 justify=CENTER, text=t)
         self.fullQueryLabel.place(relwidth=0.98, relheight=0.25, \
                               relx=0.01, rely=0.1)
+        self.changeQuery(t)
+        
         t = self.data.dataDict[self.currentDataTS]['augResponse']
         if self.randomizeResponse and (self.seeAugResp == False):
             t = self.data.dataDict[self.currentDataTS]['origResponse']
+
         self.fullResponseLabel = Label(self.textWindow,\
-                                 justify=CENTER, text="CHAT RESPONSE\n\n"+t)
+                                 justify=CENTER, text=t)
         self.fullResponseLabel.place(relwidth=0.98, relheight=0.25, \
                               relx=0.01, rely=0.5)
+        self.changeResponse(t)
 
-        
     def makeVideoWindow(self, pathToVideo = None, chatWinWidth = 600, chatWinHeight = 300, \
                         minHeight = 10, ratingScale = 10, winXpos = None, winYpos = None):
         if pathToVideo == None:
@@ -489,14 +500,32 @@ class GUI_EVAL:
     def changeQuery(self, newText = "changed"):
         self.queryLabel["text"]=newText
         self.queryLabel.update()
-        self.fullQueryLabel["text"]=newText
+
+        reformated = self.formatLongText(newText)
+        self.fullQueryLabel["text"]="USER QUERY\n\n" + reformated
         self.fullQueryLabel.update()
         
     def changeResponse(self, newText = "changed"):
         self.responseLabel["text"]=newText
         self.responseLabel.update()
-        self.fullResponseLabel["text"]=newText
+        reformated = self.formatLongText(newText)
+        self.fullResponseLabel["text"]="CHAT RESPONSE\n\n" + reformated
         self.fullResponseLabel.update()
+
+    def formatLongText(self,t):
+        # formats longer queries and responses into 50 letter max wide
+        if len(t) > 50:
+            temp = ""
+            for each in range(int(len(t)/50)+1):
+                start = each*50
+                stop = (each+1)*50
+                if stop > len(t):
+                    stop = len(t)
+                add = t[start:stop] + "\n"
+                temp = temp + add
+            return temp
+        else:
+            return t
         
     def recordSympathyValue(self):
         pass
