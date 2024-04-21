@@ -9,7 +9,8 @@ from DoSpeech import DoSpeech
 from PIL import Image, ImageTk
 from multiprocessing.pool import ThreadPool
 from dataHandler import DATA
- 
+import random
+
 import subprocess
 import sys
 
@@ -57,7 +58,12 @@ class GUI_EVAL:
         self.currentVidPath = self.data.dataDict[self.currentDataTS]['vidPath']
         self.outOfData = False
         self.cantFindVideo = False
-
+        self.randomizeResponse = True # observer sees a random mix of augmented and baseline
+        self.seeAugResp = True
+        self.randVal = 6
+        if self.randomizeResponse and (random.randint(1,10) > self.randVal):
+            self.randomizeResp()
+        
         ###################################
         #   BEGIN WINDOW CONSTRUCTION
         ###################################
@@ -93,7 +99,8 @@ class GUI_EVAL:
 
         # video player window
         self.makeVideoWindow()
-
+        self.makeTextWindow()
+        
         # video player label
         self.playerLabelHeight = self.videoLabelHeight + self.buttonHeight + self.buffer
         self.playerLabel = Label(self.Window,bg=self.bgColor,\
@@ -136,7 +143,10 @@ class GUI_EVAL:
                               relx=0.01, rely=self.queryLabelHeight)
         
         self.responseLabelHeight = self.queryLabelHeight +self.buttonHeight + self.buffer
-        self.responseLabel = Label(self.Window, text=self.data.dataDict[self.currentDataTS]['augResponse'],\
+        t = self.data.dataDict[self.currentDataTS]['augResponse']
+        if self.randomizeResponse and (self.seeAugResp == False):
+            t = self.data.dataDict[self.currentDataTS]['origResponse']
+        self.responseLabel = Label(self.Window, text=t,\
                                 justify=CENTER)
         self.responseLabel.place(relwidth=0.98, relheight=self.buttonHeight, \
                               relx=0.01, rely=self.responseLabelHeight)
@@ -233,7 +243,25 @@ class GUI_EVAL:
 
         #print(xpos, ypos, xwidth, yheight)
         return xpos, ypos, xwidth, yheight
-    
+
+    def makeTextWindow(self):
+        # window for full query and response
+        self.textWindow = Toplevel()
+        self.textWindow.resizable(width=True, height=True)
+        self.textWindow.attributes("-topmost",True)
+        self.fullQueryLabel = Label(self.textWindow,\
+                                 justify=CENTER, text="USER QUERY\n\n"+self.data.dataDict[self.currentDataTS]['origQuery'])
+        self.fullQueryLabel.place(relwidth=0.98, relheight=0.25, \
+                              relx=0.01, rely=0.1)
+        t = self.data.dataDict[self.currentDataTS]['augResponse']
+        if self.randomizeResponse and (self.seeAugResp == False):
+            t = self.data.dataDict[self.currentDataTS]['origResponse']
+        self.fullResponseLabel = Label(self.textWindow,\
+                                 justify=CENTER, text="CHAT RESPONSE\n\n"+t)
+        self.fullResponseLabel.place(relwidth=0.98, relheight=0.25, \
+                              relx=0.01, rely=0.5)
+
+        
     def makeVideoWindow(self, pathToVideo = None, chatWinWidth = 600, chatWinHeight = 300, \
                         minHeight = 10, ratingScale = 10, winXpos = None, winYpos = None):
         if pathToVideo == None:
@@ -331,6 +359,10 @@ class GUI_EVAL:
               self.understandVar.get(), self.overallVar.get())
 
     def recordObserverData(self):
+        if self.seeAugResp:
+            print("used augmented response...")
+        else:
+            print("used original response...")
         print("recording observer ratings and appending it to: ", self.observerDataPath)
         # timestampStart|+|45||vidPath|+|./test.mp4||origQuery|+|hello||augQuery|+|hello(happy)||origResponse|+|yes?||augResponse|+|you seem happy!\n
         kvDelim = '|+|'
@@ -345,7 +377,8 @@ class GUI_EVAL:
                      elDelim + 'symResp' + kvDelim + symResp +\
                      elDelim + 'appResp' + kvDelim + appResp +\
                      elDelim + 'undResp' + kvDelim + undResp +\
-                     elDelim + 'ovlResp' + kvDelim + ovlResp + '\n'
+                     elDelim + 'ovlResp' + kvDelim + ovlResp +\
+                     elDelim + 'seeAugResp' + kvDelim + str(self.seeAugResp) + '\n'
 
         # if file exists, append data to it
         if not os.path.isfile(self.observerDataPath):
@@ -354,6 +387,12 @@ class GUI_EVAL:
         else:
             with open(self.observerDataPath, 'a') as f:
                 f.write(dataString)
+
+    def randomizeResp(self):
+        if random.randint(1,10) > self.randVal:
+            self.seeAugResp = False
+        else:
+            self.seeAugResp = True
 
     def nextVideo(self, newVideo = None):
         av = self.appropriatenessVar.get()
@@ -382,6 +421,9 @@ class GUI_EVAL:
             if newVideo == None:
                 # find next timestamp and video path
                 self.currentDataTS = next(self.dataKeyIter, None)
+                if self.randomizeResponse:
+                    self.randomizeResp()
+                    
                 if self.currentDataTS == None:
                     print("reached the end of the data... aborting video playback...")
                     self.outOfData = True
@@ -402,7 +444,10 @@ class GUI_EVAL:
                         print("loading: ",newVideo)
                         # update buttons
                         self.changeQuery(self.data.dataDict[self.currentDataTS]['origQuery'])
-                        self.changeResponse(self.data.dataDict[self.currentDataTS]['augResponse'])
+                        t = self.data.dataDict[self.currentDataTS]['augResponse']
+                        if self.randomizeResponse and (self.seeAugResp == False):
+                            t = self.data.dataDict[self.currentDataTS]['origResponse']
+                        self.changeResponse(t)
 
                         
                         xpos, ypos, xwidth, yheight = self.getVideoWindowPositions()
@@ -444,9 +489,15 @@ class GUI_EVAL:
     def changeQuery(self, newText = "changed"):
         self.queryLabel["text"]=newText
         self.queryLabel.update()
+        self.fullQueryLabel["text"]=newText
+        self.fullQueryLabel.update()
+        
     def changeResponse(self, newText = "changed"):
         self.responseLabel["text"]=newText
         self.responseLabel.update()
+        self.fullResponseLabel["text"]=newText
+        self.fullResponseLabel.update()
+        
     def recordSympathyValue(self):
         pass
     def recordAppropriatenessValue(self):
