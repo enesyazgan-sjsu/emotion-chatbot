@@ -291,6 +291,10 @@ class GUI_EVAL:
     def setVideo(self, newVideo = None):
         if newVideo == None:
             newVideo = self.currentVidPath
+        try:
+            self.player
+        except: # play test on open
+            newVideo = './test.mp4'
         self.player = tkvideo(newVideo,\
                  self.playerLabel, loop = 0, size = (self.playerSizeX,self.playerSizeY))
         
