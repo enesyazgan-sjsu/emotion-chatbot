@@ -20,6 +20,9 @@ try:
     from tkvideo import tkvideo
 except:
     subprocess.call([sys.executable, '-m', 'pip', 'install', 'tkvideo'])
+    import tkvideo
+    from tkvideo import *
+    from tkvideo import tkvideo
 
 PATH_TO_OBSERVER_DATA = './observerData.txt' # appends observer judgements to this file
 DATA_PATH = './tempDataSave.txt' # reads in video paths, queries, responses, etc. from this file
