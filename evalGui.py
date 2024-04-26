@@ -1,24 +1,25 @@
-import os
-import time
-import socket
-from tkinter import *
-import tkinter.messagebox
+#import time
+#import socket
 #import openai
-from chatHandler import ChatHandler
+#from chatHandler import ChatHandler
 #from DoSpeech import DoSpeech
 #from PIL import Image, ImageTk
 #from multiprocessing.pool import ThreadPool
+
+import os
+from tkinter import *
+import tkinter.messagebox
 from dataHandler import DATA
 import random
 
-import subprocess
-import sys
 
 try:
     import tkvideo
     from tkvideo import *
     from tkvideo import tkvideo
 except:
+    import subprocess
+    import sys
     subprocess.call([sys.executable, '-m', 'pip', 'install', 'tkvideo'])
     import tkvideo
     from tkvideo import *
