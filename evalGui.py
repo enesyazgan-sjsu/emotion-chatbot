@@ -3,11 +3,11 @@ import time
 import socket
 from tkinter import *
 import tkinter.messagebox
-import openai
+#import openai
 from chatHandler import ChatHandler
-from DoSpeech import DoSpeech
-from PIL import Image, ImageTk
-from multiprocessing.pool import ThreadPool
+#from DoSpeech import DoSpeech
+#from PIL import Image, ImageTk
+#from multiprocessing.pool import ThreadPool
 from dataHandler import DATA
 import random
 
